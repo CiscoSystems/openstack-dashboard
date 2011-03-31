@@ -1,10 +1,10 @@
-{% extends "django_nova/instances/base.html" %}
+{% extends "openbase.html" %}
 
 {% block title %} - Instances{% endblock %}
 {% block pageclass %}instances{% endblock %}
 
 {% block content %}
-  <div id="page_head">
+  <div id="page_head" class='home_block'>
     <div id="spinner"></div>
 
     <h2 id="page_heading">Instances</h2>
@@ -13,7 +13,7 @@
 
   {% include "django_nova/_messages.html" %}
 
-  <div id="instances">
+  <div id="instances" class='home_block'>
     {% include "_instances_list.html" %}
   </div>
 
@@ -24,75 +24,4 @@
   <div id="connection_error" style="display:none;" title="Connection Error">
     <p><span class="ui-icon ui-icon-alert"></span>A connection error has occurred. Please ensure you are still connected to VPN.</p>
   </div>
-{% endblock %}
-
-{% block footerjs %}
-{{ block.super }}
-<script type="text/javascript">
-
-  $(function() {
-    setInterval(function() {
-      $('#spinner').show();
-      {% if detail %}
-        $('#instances').load('{% url nova_instances_refresh_detail project.projectname selected_instance.id %}', onInstancesUpdated);
-      {% else %}
-        $('#instances').load('{% url novaO_instances %}', onInstancesUpdated);
-      {% endif %}
-    }, 15000);
-
-    initInstanceForms();
-
-    $('#dlg_confirm').dialog({
-      buttons: {
-        'Ok': onConfirmOK,
-        'Cancel': function() { $(this).dialog('close'); }
-      },
-      autoOpen: false,
-      resizable: false,
-      width: 500,
-      height: 200
-    });
-  });
-
-  var _terminateID = null;
-
-  function initInstanceForms() {
-    $('.form-terminate').submit(function() {
-      _terminateID = $(this).children(':first').val()
-      $('#spn_terminate').text(_terminateID);
-      $('#dlg_confirm').dialog('open');
-      return false;
-    });
-  }
-
-  function onInstancesUpdated(response, status, xhr) {
-    $('#spinner').hide();
-
-    switch(xhr.status) {
-      case 200:
-        initInstanceForms();
-        break;
-
-      case 403:
-        document.location = '{% url auth_login %}';
-        break;
-
-      default:
-        $('#connection_error').dialog({
-          dialogClass: 'alert',
-          modal: true,
-          closeOnEscape: true,
-          buttons:{ "Close": function() { $(this).dialog("close"); } },
-        });
-        $('#connection_error').dialog('open');
-        break;
-    }
-  }
-
-  function onConfirmOK() {
-    $(this).dialog('close');
-    form = document.getElementById('form_terminate_' + _terminateID);
-    if(form) form.submit();
-  }
-</script>
 {% endblock %}

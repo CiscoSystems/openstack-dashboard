@@ -1,0 +1,54 @@
+{% extends "base-root.html" %}
+
+{% block sidebar %}
+  <div id="sidebar">
+    <ul id="navigation">
+      {% block nav_home %}<li class="first"><h3><a href="/">Home</a></h3></li>{% endblock %}
+      <li>
+        <div id="projects">
+            <div id="irt" class="project active">
+                <ul>
+                  <li>
+                      <form id="frm_region" method="post" action="{% url region_change %}">
+                        {% csrf_token %}
+                        <fieldset>
+                          <input name="redirect_url" type="hidden" value="{{ request.get_full_path }}" />
+                          <noscript>
+                            <input id="btn_region_change" type="submit" value="Change" />
+                          </noscript>
+                            <label for="sel_region">Region: </label>
+                            <select id="sel_region" name="region">
+                              {% for region in regions %}
+                                <option{% if region.name == current_region.name %} selected{% endif %}>
+                                  {{ region.name }}
+                                </option>
+                              {% endfor %}
+                            </select>
+                        </fieldset>
+                      </form>
+                  </li>
+                  <li {% if sidebar_selected == "instances" %}class="active"{% endif %}>
+                    <a id="lnk_instances_IRT" href="/open/instances">Instances</a>
+                  </li>
+                  <li {% if sidebar_selected == "images" %}class="active"{% endif %}>
+                    <a id="lnk_images_IRT" href="/open/images">Images</a>
+                  </li>
+                  <li {% if sidebar_selected == "flavors" %}class="active"{% endif %}>
+                    <a id="lnk_keypairs_IRT" href="/open/flavors">Flavors</a>
+                  </li>
+                  <li {% if sidebar_selected == "keys" %}class="active"{% endif %}>
+                    <a id="lnk_keypairs_IRT" href="/open/keys">Keys</a>
+                  </li>
+                  <li {% if sidebar_selected == "volumes" %}{% endif %}>
+                    <a id="lnk_volumes_IRT" href="/open/volumes">Volumes</a>
+                  </li>
+                </ul>
+            </div>
+        </div>
+      </li>
+   </ul>
+  </div>
+{% endblock %}
+{% block rootcontent %}
+{% block content %}{% endblock %}
+{% endblock %}
