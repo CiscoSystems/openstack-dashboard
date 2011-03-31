@@ -98,6 +98,12 @@ def install_dependencies(venv=VENV):
   f.write("%s\n" % ROOT)
 
 
+def install_openstack_compute():
+    print 'Installing openstack-compute ...'
+    path = os.path.join(ROOT, '..', 'openstack-compute')
+    run_command([WITH_VENV, 'python', 'setup.py', 'build'], cwd=path)
+    run_command([WITH_VENV, 'python', 'setup.py', 'install'], cwd=path)
+
 def install_django_nova():
     print 'Installing django_nova in development mode...'
     path = os.path.join(ROOT, '..', 'django-nova')
@@ -120,6 +126,7 @@ def main():
   check_dependencies()
   create_virtualenv()
   install_dependencies()
+  install_openstack_compute()
   install_django_nova()
   print_summary()
 

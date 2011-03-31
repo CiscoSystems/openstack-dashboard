@@ -1,7 +1,7 @@
 @import url("reset.css");
 
 /*==================
-  === Misc/General 
+  === Misc/General
   ==================*/
 
 body {
@@ -60,7 +60,7 @@ p .ui-icon {
 
 
 /*==================
-  === Header 
+  === Header
   ==================*/
 
 #header {
@@ -96,7 +96,7 @@ p .ui-icon {
 
 
 /*==================
-  === Content 
+  === Content
   ==================*/
 
 #content_wrap {
@@ -136,7 +136,6 @@ p .ui-icon {
 .block {
 	background-color: #dff2ff;
 	border: 1px solid #b1e7ff;
-	width: 445px;
 	float: left;
 }
 
@@ -151,7 +150,7 @@ p .ui-icon {
 
 #content.home #projects {
 	float: left;
-	width: 445px;
+	width: 240px;
 	margin: 0 0 10px;
 }
 #content.home #projects li {
@@ -195,7 +194,7 @@ span.data {
 
 #home_login fieldset {
 	width: 400px;
-	padding: 20px;
+	padding: 20px 20px 46px 20px;
 }
 
 #home_login label {
@@ -362,6 +361,20 @@ span#project_name {
 	margin-left: 5px;
 }
 
+#frm_region {
+    padding: 5px 0px;
+}
+
+#frm_region label {
+	font-weight: bold;
+}
+#frm_region select {
+	min-width: 135px;
+	margin-left: 5px;
+}
+
+
+
 #page_head {
 	background: #f1f1f1;
 	float: left;
@@ -483,7 +496,7 @@ input.delete, input.detach {
 }
 
 #right_content td.image_location {
-	text-align: left; 
+	text-align: left;
 }
 
 h3.image_list_heading {
@@ -505,7 +518,7 @@ h3.image_list_heading {
 td.detail_wrapper {
 	padding: 0 !important;
 	text-align: left !important;
-	
+
 }
 div.image_detail, div.instance_detail {
 	background: url(/media/dashboard/img/image_detail.png) top left no-repeat;
@@ -662,7 +675,7 @@ div.image_detail, div.instance_detail {
 
 /* Sidebar Projects Navigation */
 
-#projects a { color: #416c82; }
+#projects a, #projects form label { color: #416c82; }
 
 #projects .project h4 a {
 	background: #e6e6e6;
@@ -717,12 +730,12 @@ div.image_detail, div.instance_detail {
 	border-bottom: none;
 	border-top: none;
 }
-#projects .project a.manage_link:hover { 
+#projects .project a.manage_link:hover {
 	background-color: #f1f1f1 !important;
 	border-color: #b7b7b7;
 }
 #projects .project.active a.manage_link { background-color: #5393c9 !important; border-color: #4c83af;}
-#projects .project.active a.manage_link:hover { 
+#projects .project.active a.manage_link:hover {
 	background-color: #80afd6 !important;
 	border-color: #b7b7b7;
 }
@@ -730,7 +743,7 @@ div.image_detail, div.instance_detail {
 
 /* Footer */
 
-#footer {  
+#footer {
 	clear: both;
 	margin-bottom: 50px;
 }

@@ -18,18 +18,52 @@
   </div>
 
   {% if request.user.is_authenticated %}
-  <div id="projects" class="block">
-    <h3>Your Projects</h3>
-    <ul>
-      {% for project in projects %}
-      <li class="project {% cycle 'odd' 'even' %}">
-        <a id="lnk_project_{{ project.projectname }}" href="{% url nova_project project.projectname %}">
-          {{ project.projectname|capfirst }}
-          <span class="data">{{ project.description|capfirst }}</span>
-        </a>
+  <div id="sidebar">
+    <ul id="navigation">
+      {% block nav_home %}
+      <li class="first"><h3><a href="/">Home</a></h3></li>
+      {% endblock %}
+
+      <li>
+        <div id="projects">
+            <div id="irt" class="project active">
+                <ul>
+                  <li>
+                      <form id="frm_region" method="post" action="{% url region_change %}">
+                        {% csrf_token %}
+                        <fieldset>
+                          <input name="redirect_url" type="hidden" value="{{ request.get_full_path }}" />
+                          <noscript>
+                            <input id="btn_region_change" type="submit" value="Change" />
+                          </noscript>
+                            <label for="sel_region">Region: </label>
+                            <select id="sel_region" name="region">
+                              {% for region in regions %}
+                                <option{% if region.name == current_region.name %} selected{% endif %}>
+                                  {{ region.name }}
+                                </option>
+                              {% endfor %}
+                            </select>
+                        </fieldset>
+                      </form>
+                  </li>
+                  <li {% if sidebar_selected == "instances" %}class="active"{% endif %}>
+                    <a id="lnk_instances_IRT" href="/project/IRT/instances">Instances</a>
+                  </li>
+                  <li {% if sidebar_selected == "images" %}class="active"{% endif %}>
+                    <a id="lnk_images_IRT" href="/project/IRT/images">Images</a>
+                  </li>
+                  <li {% if sidebar_selected == "keys" %}class="active"{% endif %}>
+                    <a id="lnk_keypairs_IRT" href="/project/IRT/keys">Keys</a>
+                  </li>
+                  <li {% if sidebar_selected == "volumes" %}class="active"{% endif %}>
+                    <a id="lnk_volumes_IRT" href="/project/IRT/volumes">Volumes</a>
+                  </li>
+                </ul>
+            </div>
+        </div>
       </li>
-      {% endfor %}
-    </ul>
+   </ul>
   </div>
 
   <div class="home_block">
@@ -62,7 +96,8 @@
     </div>
     {% if not request.user.is_authenticated %}
       <div class="home_block">
-        <h3>Don't have an account? <a id="lnk_register" href="{% url registration_register %}">Register</a></h3>
+        <h3>Don't have an account?</h3><br/>
+        <a id="lnk_register" href="{% url registration_register %}">Register</a>
       </div>
     {% endif %}
     <div class="home_block">
@@ -75,4 +110,3 @@
     </div>
   {% endif %}
 {% endblock %}
-
