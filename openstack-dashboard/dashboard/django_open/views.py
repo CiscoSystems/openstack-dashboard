@@ -19,12 +19,13 @@ from django import template
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render_to_response
 from django_nova.exceptions import handle_nova_error
+from django_open import adminclient
 
 @login_required
 @handle_nova_error
 def instances(request, project_id=None):
     project = None
-    instances = None
+    instances = adminclient.OpenManager().list_instances()
 
     return render_to_response('instances.html', {
         'region': None,
@@ -36,12 +37,12 @@ def instances(request, project_id=None):
 @login_required
 @handle_nova_error
 def images(request):
-    pass
+    images = adminclient.OpenManager().list_images()
 
 @login_required
 @handle_nova_error
 def flavors(request):
-    pass
+    flavors = adminclient.OpenManager().list_image_flavors()
 
 @login_required
 @handle_nova_error
