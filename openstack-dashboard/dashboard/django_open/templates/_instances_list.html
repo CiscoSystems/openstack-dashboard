@@ -72,21 +72,18 @@
             </td>
           {% else %}
 
-            <td><a href="{% url nova_instances_detail project.projectname instance.id %}">{{ instance.id }} {% if instance.displayName %}({{ instance.displayName }}){% endif %}
+            <td><a href="#">{{ instance.id }} {% if instance.displayName %}({{ instance.displayName }}){% endif %}
               </a></td>
-            <td class="odd">{{ instance.image_id }}</td>
-            <td>{{ instance.instance_type }}</td>
-            <td class="odd">{{ instance.dns_name }}</td>
-            <td>{{ instance.state }}</td>
+            <td class="odd">{{instance.name}} ({{ instance.imageId }})</td>
+            <td>{{ instance.flavorId }}</td>
+            <td class="odd">{{ instance.private_ip }}</td>
+            <td>{{ instance.status }}</td>
             <td id="actions" class="odd">
-              <form id="form_terminate_{{ instance.id }}" class="form-terminate" method="post" action="{% url nova_instances_terminate project.projectname %}" >
+              <form id="form_terminate_{{ instance.id }}" class="form-terminate" method="post" action="#" >
                 <input name="instance_id" type="hidden" value="{{ instance.id }}" />
                 <input id="terminate_{{instance.id}}" class="terminate" type="submit" value="Terminate" />
                 {% csrf_token %}
               </form>
-              {% if instance.state == "running" %}
-              <a href="{% url nova_instances_console project.projectname instance.id %}" id="console_{{instance.id}}" class="console" target="_blank">Show Console</a>
-              {% endif %}
           </td>
           {% endif %}
         </tr>

@@ -100,6 +100,7 @@ def install_dependencies(venv=VENV):
 
 def install_openstack_compute():
     print 'Installing openstack-compute ...'
+    # pip install -e git://github.com/jacobian/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg
     path = os.path.join(ROOT, '..', 'openstack-compute')
     run_command([WITH_VENV, 'python', 'setup.py', 'build'], cwd=path)
     run_command([WITH_VENV, 'python', 'setup.py', 'install'], cwd=path)
