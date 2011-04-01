@@ -1,0 +1,48 @@
+{% extends "openbase.html" %}
+
+{% block title %} - Instances{% endblock %}
+{% block pageclass %}instances{% endblock %}
+
+{% block content %}
+  <div id="page_head" class='home_block'>
+    <div id="spinner"></div>
+
+    <h2 id="page_heading">Keys</h2>
+    <p id="page_description">Cryptographic keys are used for authentication.</a>.</p>
+  </div>
+
+  {% include "django_nova/_messages.html" %}
+
+  <div id="instances" class='home_block'>
+      {% if flavors %}
+      <table style="width: 100%">
+        <tr>
+          <th>ID</th>
+          <th>Flavor</th>
+          <th>Disk</th>
+          <th>RAM</th>
+        </tr>
+        {% for flavor in flavors %}
+        <tr class="{% cycle 'odd' 'even' %}">
+            <td class="odd">{{flavor.id}}</td>
+            <td>{{ flavor.name }}</td>
+            <td class="odd">{{ flavor.disk }}</td>
+            <td>{{ flavor.ram }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <div class="ui-widget">
+        <div class="ui-state-highlight ui-corner-all">
+          <p>
+            <span class="ui-icon ui-icon-info"></span>
+            No keys are currently available.
+          </p>
+        </div>
+      </div>
+      {% endif %}
+  </div>
+  <div id="connection_error" style="display:none;" title="Connection Error">
+    <p><span class="ui-icon ui-icon-alert"></span>A connection error has occurred. Please ensure you are still connected to VPN.</p>
+  </div>
+{% endblock %}

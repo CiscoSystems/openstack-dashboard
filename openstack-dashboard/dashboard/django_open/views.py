@@ -39,6 +39,9 @@ def instances(request, project_id=None):
 def images(request):
     images = adminclient.OpenManager().list_images()
 
+    return render_to_response ('images.html', {
+        'images': images}, context_instance = template.RequestContext(request))
+
 @login_required
 @handle_nova_error
 def flavors(request):
@@ -51,9 +54,11 @@ def flavors(request):
 @login_required
 @handle_nova_error
 def keys(request):
-    pass
+    return render_to_response ('keys.html', {
+        'keys': None}, context_instance = template.RequestContext(request))
 
 @login_required
 @handle_nova_error
 def volumes(request):
-    pass
+    return render_to_response ('volumes.html', {
+        'volumes': None}, context_instance = template.RequestContext(request))
