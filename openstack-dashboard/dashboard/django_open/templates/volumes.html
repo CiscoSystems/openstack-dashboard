@@ -13,8 +13,8 @@
 
   {% include "django_nova/_messages.html" %}
 
-  <div id="instances" class='home_block'>
-      {% if flavors %}
+  <div id="volumes">
+      {% if volumes %}
       <table style="width: 100%">
         <tr>
           <th>ID</th>
@@ -22,12 +22,12 @@
           <th>Disk</th>
           <th>RAM</th>
         </tr>
-        {% for flavor in flavors %}
+        {% for volume in volumes %}
         <tr class="{% cycle 'odd' 'even' %}">
-            <td class="odd">{{flavor.id}}</td>
-            <td>{{ flavor.name }}</td>
-            <td class="odd">{{ flavor.disk }}</td>
-            <td>{{ flavor.ram }}</td>
+            <td class="odd">{{volume.id}}</td>
+            <td>{{ volume.name }}</td>
+            <td class="odd">{{ volume.disk }}</td>
+            <td>{{ volume.ram }}</td>
         </tr>
         {% endfor %}
       </table>

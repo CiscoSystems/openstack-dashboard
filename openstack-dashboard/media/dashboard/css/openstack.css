@@ -287,6 +287,10 @@ span.data {
 	margin-bottom: 5px;
 }
 
+#flavors {
+    float: left;
+}
+
 /* User Roles Manager */
 
 #user_edit {
