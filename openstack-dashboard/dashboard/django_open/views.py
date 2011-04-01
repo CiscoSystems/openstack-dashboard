@@ -42,7 +42,11 @@ def images(request):
 @login_required
 @handle_nova_error
 def flavors(request):
-    flavors = adminclient.OpenManager().list_image_flavors()
+    flavors = sorted(adminclient.OpenManager().list_image_flavors(),
+                     key=lambda flavor: flavor.id)
+
+    return render_to_response ('flavors.html', {
+        'flavors': flavors}, context_instance = template.RequestContext(request))
 
 @login_required
 @handle_nova_error
