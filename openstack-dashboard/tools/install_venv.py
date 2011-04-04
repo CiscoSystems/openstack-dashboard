@@ -98,12 +98,10 @@ def install_dependencies(venv=VENV):
   f.write("%s\n" % ROOT)
 
 
-def install_openstack_compute():
+def install_openstack_compute(venv=VENV):
     print 'Installing openstack-compute ...'
-    # pip install -e git://github.com/jacobian/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg
-    path = os.path.join(ROOT, '..', 'openstack-compute')
-    run_command([WITH_VENV, 'python', 'setup.py', 'build'], cwd=path)
-    run_command([WITH_VENV, 'python', 'setup.py', 'install'], cwd=path)
+    run_command([WITH_VENV, 'pip', 'install', '-E', venv, '-e', 'git://github.com/jacobian/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg'],
+                redirect_output=False)
 
 def install_django_nova():
     print 'Installing django_nova in development mode...'
