@@ -1,0 +1,16 @@
+OpenStack django_open
+---------------------
+
+The Django-Nova project is a Django module that is used to provide web based
+interactions with the OpenStack Nova cloud controller. The django_open module 
+aims to provide equivalent functionality using the openstack API.
+
+There is a reference implementation that uses this module located at:
+
+    http://launchpad.net/openstack-dashboard
+
+    It is highly recommended that you make use of this reference implementation
+    so that changes you make can be visualized effectively and are consistent.
+    Using this reference implementation as a development environment will greatly
+    simplify development of the django-nova module.
+

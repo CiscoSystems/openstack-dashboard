@@ -108,6 +108,11 @@ def install_django_nova():
     path = os.path.join(ROOT, '..', 'django-nova')
     run_command([WITH_VENV, 'python', 'setup.py', 'develop'], cwd=path)
 
+def install_django_open():
+    print 'Installing django_open ...'
+    path = os.path.join(ROOT, '..', 'openstackAPI')
+    run_command([WITH_VENV, 'python', 'setup.py', 'develop'], cwd=path)
+
 
 def print_summary():
   summary = """
@@ -127,6 +132,7 @@ def main():
   install_dependencies()
   install_openstack_compute()
   install_django_nova()
+  install_django_open()
   print_summary()
 
 if __name__ == '__main__':
