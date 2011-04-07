@@ -21,7 +21,7 @@
           <th>Name</th>
           <th>Created</th>
           <th>Updated</th>
-          <th>Status</th>
+          <th colspan="2">Status</th>
         </tr>
         {% for image in images %}
         <tr class="{% cycle 'odd' 'even' %}">
@@ -30,6 +30,13 @@
             <td class="odd">{{ image.created }}</td>
             <td>{{ image.updated }}</td>
             <td class="odd">{{ image.status }}</td>
+            <td class="image_launch_btn odd">
+              <form id="launch_{{ image.id }}" class="form_launch" method="post" action="{% url novaO_image_launch %}" >
+                <input name="image_id" type="hidden" value="{{ image.id }}" />
+                <input id="id="launch_{{ image.id }}"" class="launch" type="submit" value="Launch" />
+                {% csrf_token %}
+              </form>
+            </td>
         </tr>
         {% endfor %}
       </table>

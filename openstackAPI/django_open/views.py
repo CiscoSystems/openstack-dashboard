@@ -21,6 +21,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render_to_response
 from django_nova.exceptions import handle_nova_error
 from django_open import adminclient
+import django_open.forms
 
 @login_required
 @handle_nova_error
@@ -61,6 +62,20 @@ def images(request):
 
     return render_to_response ('images.html', {
         'images': images}, context_instance = template.RequestContext(request))
+
+@login_required
+@handle_nova_error
+def image_launch(request):
+    if request.method == 'POST': # If the form has been submitted...
+        form = django_open.forms.LaunchForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            return redirect('novaO_instances')
+        else:
+            form = LaunchForm() # An unbound form
+
+    return render_to_response('image_launch.html', {'form': form, })
+
+
 
 @login_required
 @handle_nova_error

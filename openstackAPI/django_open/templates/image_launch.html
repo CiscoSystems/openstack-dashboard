@@ -1,0 +1,12 @@
+<div id="dlg_launch" title="Launch Instance" style="display:none;">
+    <form id="frm_launch" action="#" method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="{% cycle 'odd' 'even'%}">
+          {{ field.label_tag }}
+          {% if field.errors %}{{ field.errors }}{% endif %}
+          {{ field }}
+        </div>
+      {% endfor %}
+    </form>
+</div>
