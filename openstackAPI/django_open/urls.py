@@ -22,6 +22,7 @@ import django_open.views
 
 urlpatterns = patterns('',
     url(r'^instances/$', django_open.views.instances, name='novaO_instances'),
+    url(r'^instances/terminate/$', django_open.views.instances_terminate, name='novaO_terminate'),
     url(r'^images/$', django_open.views.images, name='novaO_images'),
     url(r'^flavors/$', django_open.views.flavors, name='novaO_flavors'),
     url(r'^keys/$', django_open.views.keys, name='novaO_keys'),

@@ -29,6 +29,9 @@ class OpenManager(object):
     def list_instances(self):
         return self._cp.servers.list()
 
+    def terminate_instance(self, instance):
+        pass
+
     def list_images(self):
         """ Currently there's an issue with images not returning name that blows
             up openstack compute """

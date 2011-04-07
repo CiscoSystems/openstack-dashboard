@@ -17,7 +17,7 @@
             <td>{{ server.flavorId }}</td>
             <td class="odd">{{ server.status }}</td>
             <td id="actions" class="odd">
-              <form id="form_terminate_{{ server.id }}" class="form-terminate" method="post" action="#" >
+              <form id="form_terminate_{{ server.id }}" class="form-terminate" method="post" action="{% url novaO_terminate %}" >
                 <input name="instance_id" type="hidden" value="{{ server.id }}" />
                 <input id="terminate_{{server.id}}" class="terminate" type="submit" value="Terminate" />
                 {% csrf_token %}
@@ -36,4 +36,3 @@
         </div>
       </div>
       {% endif %}
-

@@ -16,6 +16,7 @@
 
 from django import http
 from django import template
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render_to_response
 from django_nova.exceptions import handle_nova_error
@@ -34,6 +35,24 @@ def instances(request, project_id=None):
         'instances': instances,
         'detail' : False,
     }, context_instance = template.RequestContext(request))
+
+@login_required
+@handle_nova_error
+def instances_terminate(request):
+    if request.method == 'POST':
+        instance_id = request.POST['instance_id']
+
+        try:
+            adminclient.OpenManager().terminate_instance(instance_id)
+        except exceptions.NovaApiError, e:
+            messages.error(request,
+                           'Unable to terminate %s: %s' %
+                           (instance_id, e.message,))
+        else:
+            messages.success(request,
+                             'Instance %s has been terminated.' % instance_id)
+
+    return redirect('novaO_instances')
 
 @login_required
 @handle_nova_error
