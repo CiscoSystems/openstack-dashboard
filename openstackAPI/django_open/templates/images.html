@@ -19,15 +19,17 @@
         <tr>
           <th>ID</th>
           <th>Name</th>
-          <th>Disk</th>
-          <th>RAM</th>
+          <th>Created</th>
+          <th>Updated</th>
+          <th>Status</th>
         </tr>
         {% for image in images %}
         <tr class="{% cycle 'odd' 'even' %}">
             <td class="odd">{{image.id}}</td>
             <td>{{ image.name }}</td>
-            <td class="odd">{{ image.disk }}</td>
-            <td>{{ image.ram }}</td>
+            <td class="odd">{{ image.created }}</td>
+            <td>{{ image.updated }}</td>
+            <td class="odd">{{ image.status }}</td>
         </tr>
         {% endfor %}
       </table>

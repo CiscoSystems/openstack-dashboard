@@ -26,6 +26,7 @@ from django_open import adminclient
 def instances(request, project_id=None):
     project = None
     instances = adminclient.OpenManager().list_instances()
+    #import pdb; pdb.set_trace()
 
     return render_to_response('instances.html', {
         'region': None,
