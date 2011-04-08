@@ -65,16 +65,17 @@ def images(request):
 
 @login_required
 @handle_nova_error
-def image_launch(request):
+def image_launch(request, image_id):
+    print "Image ID:", image_id
     if request.method == 'POST': # If the form has been submitted...
         form = django_open.forms.LaunchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
             return redirect('novaO_instances')
-        else:
-            form = LaunchForm() # An unbound form
+    else:
+        form = django_open.forms.LaunchForm(initial={'image_id' : image_id}) # An unbound form
 
-    return render_to_response('image_launch.html', {'form': form, })
-
+    return render_to_response('image_launch.html', {'form': form, },
+                              context_instance=template.RequestContext(request))
 
 
 @login_required

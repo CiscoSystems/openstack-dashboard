@@ -797,3 +797,17 @@ div.image_detail, div.instance_detail {
 form.edit_instance input[type="submit"], form.edit_image input[type="submit"] {
   margin-right: 4px;
 }
+
+#launch_img .errorlist {
+    color: #f00;
+}
+
+#launch_img table {
+    width: 80%;
+}
+
+#launch_img .lft_lbl {
+    text-align: right;
+    font-weight: bolder;
+    width: 35%;
+}

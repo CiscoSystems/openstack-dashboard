@@ -1,7 +1,7 @@
 {% extends "openbase.html" %}
 
-{% block title %} - Instances{% endblock %}
-{% block pageclass %}instances{% endblock %}
+{% block title %} - Images{% endblock %}
+{% block pageclass %}images{% endblock %}
 
 {% block content %}
   <div id="page_head" class='home_block'>
@@ -31,11 +31,7 @@
             <td>{{ image.updated }}</td>
             <td class="odd">{{ image.status }}</td>
             <td class="image_launch_btn odd">
-              <form id="launch_{{ image.id }}" class="form_launch" method="post" action="{% url novaO_image_launch %}" >
-                <input name="image_id" type="hidden" value="{{ image.id }}" />
-                <input id="id="launch_{{ image.id }}"" class="launch" type="submit" value="Launch" />
-                {% csrf_token %}
-              </form>
+                <a id="launch_{{ image.id }}" class="launch" href="{% url novaO_image_launch image.id %}">Launch</a>
             </td>
         </tr>
         {% endfor %}
