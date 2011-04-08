@@ -29,8 +29,18 @@ class OpenManager(object):
     def list_instances(self):
         return self._cp.servers.list()
 
-    def terminate_instance(self, instance):
-        pass
+    def terminate_instance(self, instance_id):
+        inst = self._cp.servers.get(instance_id)
+        self._cp.servers.delete(inst)
+
+    def launch_instance(self, name, image_id, flavor_id, ipgroup_id=None):
+        im = self._cp.images.get(image_id)
+        fl = self._cp.flavors.get(flavor_id)
+        if ipgroup_id:
+            ipg = self._cp.ipgroups.get(ipgroup_id)
+        else:
+            ipg = None
+        self._cp.servers.create(name, im, fl, ipg)
 
     def list_images(self):
         """ Currently there's an issue with images not returning name that blows

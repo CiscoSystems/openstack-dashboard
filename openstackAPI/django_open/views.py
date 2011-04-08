@@ -28,7 +28,6 @@ import django_open.forms
 def instances(request, project_id=None):
     project = None
     instances = adminclient.OpenManager().list_instances()
-    #import pdb; pdb.set_trace()
 
     return render_to_response('instances.html', {
         'region': None,
@@ -41,7 +40,8 @@ def instances(request, project_id=None):
 @handle_nova_error
 def instances_terminate(request):
     if request.method == 'POST':
-        instance_id = request.POST['instance_id']
+        inst = request.POST['instance_id']
+        instance_id = int(inst)
 
         try:
             adminclient.OpenManager().terminate_instance(instance_id)
@@ -67,16 +67,27 @@ def images(request):
 @handle_nova_error
 def image_launch(request, image_id):
     print "Image ID:", image_id
-    if request.method == 'POST': # If the form has been submitted...
-        form = django_open.forms.LaunchForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            return redirect('novaO_instances')
+    if request.method == 'POST':
+        form = django_open.forms.LaunchForm(request.POST)
+        if form.is_valid():
+            #import pdb; pdb.set_trace()
+            userdata = form.clean()
+
+            if userdata['ip_group']:
+                ip_grp = int(userdata['ip_group'])
+            else:
+                ip_grp = None
+
+            adminclient.OpenManager().launch_instance(userdata['name'],
+                                                      int(userdata['image_id']),
+                                                      int(userdata['flavor']),
+                                                      ip_grp)
+            return redirect('novaO_images')
     else:
-        form = django_open.forms.LaunchForm(initial={'image_id' : image_id}) # An unbound form
+        form = django_open.forms.LaunchForm(initial={'image_id' : image_id})
 
     return render_to_response('image_launch.html', {'form': form, },
                               context_instance=template.RequestContext(request))
-
 
 @login_required
 @handle_nova_error
