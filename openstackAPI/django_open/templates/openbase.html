@@ -9,7 +9,7 @@
             <div id="irt" class="project active">
                 <ul>
                   <li>
-                      <form id="frm_region" method="post" action="{% url region_change %}">
+                      <form id="frm_region" method="post" action="#">
                         {% csrf_token %}
                         <fieldset>
                           <input name="redirect_url" type="hidden" value="{{ request.get_full_path }}" />
@@ -18,11 +18,15 @@
                           </noscript>
                             <label for="sel_region">Region: </label>
                             <select id="sel_region" name="region">
-                              {% for region in regions %}
-                                <option{% if region.name == current_region.name %} selected{% endif %}>
-                                  {{ region.name }}
-                                </option>
-                              {% endfor %}
+                              {% if regions %}
+                                {% for region in regions %}
+                                  <option{% if region.name == current_region.name %} selected{% endif %}>
+                                    {{ region.name }}
+                                  </option>
+                                {% endfor %}
+                              {%else%}
+                                  <option value="1" selected>Nova</option>
+                              {%endif%}
                             </select>
                         </fieldset>
                       </form>
