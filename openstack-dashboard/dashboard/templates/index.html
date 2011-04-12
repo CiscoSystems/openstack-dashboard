@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load django_nova_tags %}
+{% load nova_tags %}
 
 {% block headercss %}
 {% endblock %}
@@ -28,29 +28,6 @@
         <div id="projects">
             <div id="irt" class="project active">
                 <ul>
-                  <li>
-                      <form id="frm_region" method="post" action="#">
-                        {% csrf_token %}
-                        <fieldset>
-                          <input name="redirect_url" type="hidden" value="{{ request.get_full_path }}" />
-                          <noscript>
-                            <input id="btn_region_change" type="submit" value="Change" />
-                          </noscript>
-                            <label for="sel_region">Region: </label>
-                            <select id="sel_region" name="region">
-                              {% if regions %}
-                                {% for region in regions %}
-                                  <option{% if region.name == current_region.name %} selected{% endif %}>
-                                    {{ region.name }}
-                                  </option>
-                                {% endfor %}
-                              {%else%}
-                                  <option value="1" selected>Nova</option>
-                              {%endif%}
-                            </select>
-                        </fieldset>
-                      </form>
-                  </li>
                   <li {% if sidebar_selected == "instances" %}class="active"{% endif %}>
                     <a id="lnk_instances_IRT" href="/open/instances">Instances</a>
                   </li>

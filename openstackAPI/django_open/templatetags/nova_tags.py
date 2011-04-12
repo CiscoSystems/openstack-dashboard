@@ -17,20 +17,18 @@
 #    under the License.
 
 """
-Views for home page.
+Template tags for working with django_nova.
 """
 
 from django import template
-from django.shortcuts import render_to_response
-from django.views.decorators.vary import vary_on_cookie
-from django_open.exceptions import handle_nova_error
+from django.conf import settings
 
+register = template.Library()
 
-@vary_on_cookie
-@handle_nova_error
-def index(request):
-    page_type = "home"
+class SiteBrandingNode(template.Node):
+    def render(self, context):
+        return settings.SITE_BRANDING
 
-    return render_to_response('index.html',
-                              {'page_type': page_type},
-                              context_instance = template.RequestContext(request))
+@register.tag
+def site_branding(parser, token):
+    return SiteBrandingNode()

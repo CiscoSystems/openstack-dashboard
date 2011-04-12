@@ -13,8 +13,8 @@ setup(
     description = ( "An initial attempt at an openstack API version of django-nova" ),
     license = 'Apache 2.0',
     url = "https://code.launchpad.net/~jeffjapan/openstack-dashboard/openstackAPI",
-    packages=['django_open'],
-    long_description=read('README'),
+    packages = ['django_open'],
+    long_description = read('README'),
     classifiers=[
         "Development Status :: 1 - Planning",
         "Framework :: Django",
@@ -24,5 +24,6 @@ setup(
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP',
     ],
+    test_suite = 'tests',
 )
 

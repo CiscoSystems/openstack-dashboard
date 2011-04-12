@@ -64,7 +64,6 @@ INSTALLED_APPS = (
     'django.contrib.markup',
     'django.contrib.syndication',
     'django_nose',
-    'django_nova',
     'django_open',
     'registration',
 )

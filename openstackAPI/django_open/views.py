@@ -19,7 +19,7 @@ from django import template
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render_to_response
-from django_nova.exceptions import handle_nova_error
+from django_open.exceptions import handle_nova_error
 from django_open import adminclient
 import django_open.forms
 

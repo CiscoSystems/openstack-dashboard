@@ -1,6 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load i18n %}
-{% load django_nova_tags %}
+{% load i18n %}{% load nova_tags %}
 
 {% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% load adminmedia %}{% admin_media_prefix %}css/dashboard.css" />{% endblock %}
 
@@ -94,4 +93,3 @@
     </div>
 </div>
 {% endblock %}
-

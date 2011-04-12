@@ -1,4 +1,4 @@
-{% autoescape off %}{% load django_nova_tags %}
+{% autoescape off %}{% load nova_tags %}
 Welcome to the {% site_branding %} Dashboard!
 
 

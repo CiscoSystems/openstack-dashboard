@@ -11,7 +11,7 @@
     <p id="page_description">Servers are launched from Images with Flavors and optional IP Groups.</p>
   </div>
 
-  {% include "django_nova/_messages.html" %}
+  {% include "_messages.html" %}
 
   <div id="image_launch">
     <form id="launch_img" action="{% url novaO_image_launch %}" method="post">{% csrf_token %}
