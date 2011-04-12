@@ -7,7 +7,7 @@ ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.append(ROOT_PATH)
 
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 SITE_ID = 1
