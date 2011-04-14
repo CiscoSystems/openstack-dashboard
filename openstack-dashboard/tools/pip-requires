@@ -1,9 +1,8 @@
 boto>=1.9b
-mock>=0.5.3
+mock>=0.7.0
 nose==1.0.0
 coverage>=3.4
 Django==1.2.4
 django-nose==0.1.2
 django-registration==0.7
 Sphinx>=1.0.7
-nova-adminclient

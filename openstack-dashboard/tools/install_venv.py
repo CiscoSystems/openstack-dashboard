@@ -31,7 +31,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 VENV = os.path.join(ROOT, '.dashboard-venv')
 WITH_VENV = os.path.join(ROOT, 'tools', 'with_venv.sh')
 PIP_REQUIRES = os.path.join(ROOT, 'tools', 'pip-requires')
-
+PROMPT='--prompt=DASH:'
 
 def die(message, *args):
   print >>sys.stderr, message % args
@@ -79,7 +79,7 @@ def create_virtualenv(venv=VENV):
   virtual environment
   """
   print 'Creating venv...',
-  run_command(['virtualenv', '-q', '--no-site-packages', VENV])
+  run_command(['virtualenv', '-q', '--no-site-packages', VENV, PROMPT])
   print 'done.'
   print 'Installing pip in virtualenv...',
   if not run_command([WITH_VENV, 'easy_install', 'pip']).strip():
@@ -100,7 +100,7 @@ def install_dependencies(venv=VENV):
 
 def install_openstack_compute(venv=VENV):
     print 'Installing openstack-compute ...'
-    run_command([WITH_VENV, 'pip', 'install', '-E', venv, '-e', 'git://github.com/jacobian/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg'],
+    run_command([WITH_VENV, 'pip', 'install', '-E', venv, '-e', 'git://github.com/jeffjapan/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg'],
                 redirect_output=False)
 
 def install_django_open():
