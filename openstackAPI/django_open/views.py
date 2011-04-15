@@ -73,15 +73,9 @@ def image_launch(request, image_id):
             #import pdb; pdb.set_trace()
             userdata = form.clean()
 
-            if userdata['ip_group']:
-                ip_grp = int(userdata['ip_group'])
-            else:
-                ip_grp = None
-
             adminclient.OpenManager().launch_instance(userdata['name'],
                                                       int(userdata['image_id']),
-                                                      int(userdata['flavor']),
-                                                      ip_grp)
+                                                      int(userdata['flavor']))
             return redirect('novaO_images')
     else:
         form = django_open.forms.LaunchForm(initial={'image_id' : image_id})

@@ -10,5 +10,4 @@ def flavorlist():
 class LaunchForm(forms.Form):
     image_id = forms.CharField(widget=forms.HiddenInput())
     name = forms.CharField(max_length=80, initial="Name of Server", label="Server Name")
-    flavor = forms.ChoiceField(choices=flavorlist(), label="Flavor", help_text="Flavor of Image to launch")
-    ip_group = forms.CharField(max_length=80, required=False, label="IP Group")
+    flavor = forms.ChoiceField(choices=flavorlist(), label="Flavor", help_text="Size of Image to launch")
