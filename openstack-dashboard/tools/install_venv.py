@@ -101,7 +101,7 @@ def install_dependencies(venv=VENV):
 
 def install_openstack_compute(venv=VENV):
     print 'Installing openstack-compute ...'
-    run_command([WITH_VENV, 'pip', 'install', '-E', venv, '-e', 'git://github.com/jeffjapan/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg'],
+    run_command([WITH_VENV, 'pip', 'install', '-E', venv, '-e', 'git://github.com/jacobian/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg'],
                 redirect_output=False)
 
 def install_django_open():
