@@ -18,16 +18,16 @@
       <table style="width: 100%">
         <tr>
           <th>ID</th>
-          <th>Flavor</th>
-          <th>Disk</th>
-          <th>RAM</th>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Size</th>
         </tr>
         {% for volume in volumes %}
         <tr class="{% cycle 'odd' 'even' %}">
             <td class="odd">{{volume.id}}</td>
-            <td>{{ volume.name }}</td>
-            <td class="odd">{{ volume.disk }}</td>
-            <td>{{ volume.ram }}</td>
+            <td>{{ volume.displayName }}</td>
+            <td class="odd">{{ volume.status }}</td>
+            <td>{{ volume.size }}GB</td>
         </tr>
         {% endfor %}
       </table>
