@@ -10,4 +10,8 @@ def flavorlist():
 class LaunchForm(forms.Form):
     image_id = forms.CharField(widget=forms.HiddenInput())
     name = forms.CharField(max_length=80, initial="Name of Server", label="Server Name")
-    flavor = forms.ChoiceField(choices=flavorlist(), label="Flavor", help_text="Size of Image to launch")
+
+    #make the dropdown populate when the form is loaded not when django is started
+    def __init__(self, *args, **kwargs):
+        super(LaunchForm, self).__init__(*args, **kwargs)
+        self.fields['flavor'] = forms.ChoiceField(choices=flavorlist(), label="Flavor", help_text="Size of Image to launch")
