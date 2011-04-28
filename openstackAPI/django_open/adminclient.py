@@ -22,9 +22,11 @@ class OpenManager(object):
     Nova Openstack API client using the openstack.compute library.
     """
     def __init__(self):
+        # set openstack.compute to use the Openstack API without Rackspace API extensions
         self._cp = openstack.compute.Compute(username=settings.OPENSTACK_USER,
                                             apikey=settings.OPENSTACK_ACCESS_KEY,
-                                            auth_url=settings.OPENSTACK_MANAGER_URL)
+                                            auth_url=settings.OPENSTACK_MANAGER_URL,
+                                            cloud_api = 'OPENSTACK')
 
     def list_instances(self):
         return self._cp.servers.list()
