@@ -14,6 +14,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from datetime import datetime
 from django import http
 from django import template
 from django.contrib import messages
@@ -59,6 +60,10 @@ def instances_terminate(request):
 @handle_nova_error
 def images(request):
     images = adminclient.OpenManager().list_images()
+
+    for im in images:
+        im.created = datetime.strptime(im.created, "%Y-%m-%dT%H:%M:%SZ") if im.created else ""
+        im.updated = datetime.strptime(im.updated, "%Y-%m-%dT%H:%M:%SZ") if im.updated else ""
 
     return render_to_response ('images.html', {
         'images': images}, context_instance = template.RequestContext(request))
