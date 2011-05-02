@@ -27,8 +27,8 @@
         <tr class="{% cycle 'odd' 'even' %}">
             <td class="odd">{{image.id}}</td>
             <td>{{ image.name }}</td>
-            <td class="odd">{{ image.created }}</td>
-            <td>{{ image.updated }}</td>
+            <td class="odd">{{ image.created|date:"Y-m-d H:i" }}</td>
+            <td>{{ image.updated|date:"Y-m-d H:i" }}</td>
             <td class="odd">{{ image.status }}</td>
             <td class="image_launch_btn odd">
                 <a id="launch_{{ image.id }}" class="launch" href="{% url novaO_image_launch image.id %}">Launch</a>
