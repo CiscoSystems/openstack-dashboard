@@ -114,7 +114,7 @@ p .ui-icon {
 #content {
 	float: left;
 	padding: 25px;
-	width: 670px;
+	width: 870px;
 }
 
 #welcome {
@@ -803,11 +803,18 @@ form.edit_instance input[type="submit"], form.edit_image input[type="submit"] {
 }
 
 #launch_img table {
-    width: 80%;
+    width: 90%;
+    margin-left: 5%;
+    margin-right: 5%;
 }
 
 #launch_img .lft_lbl {
     text-align: right;
     font-weight: bolder;
     width: 35%;
+}
+
+#rgt_content {
+    float: right;
+    width: 620px;
 }

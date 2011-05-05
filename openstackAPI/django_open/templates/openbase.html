@@ -1,6 +1,6 @@
 {% extends "base-root.html" %}
+{% block rootcontent %}
 
-{% block sidebar %}
   <div id="sidebar">
     <ul id="navigation">
       {% block nav_home %}<li class="first"><h3><a href="/">Home</a></h3></li>{% endblock %}
@@ -29,7 +29,7 @@
       </li>
    </ul>
   </div>
-{% endblock %}
-{% block rootcontent %}
+<div id="rgt_content">
 {% block content %}{% endblock %}
+</div>
 {% endblock %}
