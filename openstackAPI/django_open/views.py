@@ -27,15 +27,9 @@ import django_open.forms
 @login_required
 @handle_nova_error
 def instances(request, project_id=None):
-    project = None
     instances = adminclient.OpenManager().list_instances()
-
-    return render_to_response('instances.html', {
-        'region': None,
-        'project': project,
-        'instances': instances,
-        'detail' : False,
-    }, context_instance = template.RequestContext(request))
+    return render_to_response('instances.html', { 'instances': instances },
+                              context_instance = template.RequestContext(request))
 
 @login_required
 @handle_nova_error
@@ -81,7 +75,7 @@ def image_launch(request, image_id):
             adminclient.OpenManager().launch_instance(userdata['name'],
                                                       int(userdata['image_id']),
                                                       int(userdata['flavor']))
-            return redirect('novaO_images')
+            return redirect('novaO_instances')
     else:
         form = django_open.forms.LaunchForm(initial={'image_id' : image_id})
 
