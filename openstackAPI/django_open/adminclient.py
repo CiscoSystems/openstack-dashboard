@@ -39,14 +39,10 @@ class OpenManager(object):
         inst = self._cp.servers.get(instance_id)
         self._cp.servers.delete(inst)
 
-    def launch_instance(self, name, image_id, flavor_id, ipgroup_id=None):
+    def launch_instance(self, name, image_id, flavor_id):
         im = self._cp.images.get(image_id)
         fl = self._cp.flavors.get(flavor_id)
-        if ipgroup_id:
-            ipg = self._cp.ipgroups.get(ipgroup_id)
-        else:
-            ipg = None
-        self._cp.servers.create(name, im, fl, ipg)
+        self._cp.servers.create(name, im, fl)
 
     def list_images(self):
         return self._cp.images.list()
@@ -59,3 +55,13 @@ class OpenManager(object):
         
     def get_flavor(self, flavor_id):
         return self._cp.flavors.get(flavor_id)
+
+    # for use in listing where instance may be in an invalid state,
+    # just display blank instead of blowing up
+    def get_instance_flavor(self, server_id):
+        try:
+            fl_id = self.get_instance(server_id).flavorId
+            flav =  self.get_flavor(fl_id)
+            return (flav.id, flav.name)
+        except:
+            return ( None, '')
