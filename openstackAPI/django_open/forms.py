@@ -3,7 +3,7 @@ from django_open import adminclient
 
 # returns a sorted list of flavor tuples formatted for the select field on the LaunchForm
 def flavorlist():
-    fl = adminclient.OpenManager().list_image_flavors()
+    fl = adminclient.OpenManager().list_flavors()
     sel = [ (f.id, f.name) for f in fl]
     return sorted(sel)
 

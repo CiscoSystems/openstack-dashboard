@@ -31,6 +31,10 @@ class OpenManager(object):
     def list_instances(self):
         return self._cp.servers.list()
 
+    # the only information that this returns not in the raw list is the flavor ID
+    def get_instance(self, server_id):
+        return self._cp.servers.get(server_id)
+
     def terminate_instance(self, instance_id):
         inst = self._cp.servers.get(instance_id)
         self._cp.servers.delete(inst)
@@ -51,6 +55,12 @@ class OpenManager(object):
             return self._cp.images.list()
         except:
             return []
+            
+    def get_image(self, image_id):
+        return self._cp.images.get(image_id)
 
-    def list_image_flavors(self):
+    def list_flavors(self):
         return self._cp.flavors.list()
+        
+    def get_flavor(self, flavor_id):
+        return self._cp.flavors.get(flavor_id)

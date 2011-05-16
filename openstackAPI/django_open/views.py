@@ -85,7 +85,7 @@ def image_launch(request, image_id):
 @login_required
 @handle_nova_error
 def flavors(request):
-    flavors = sorted(adminclient.OpenManager().list_image_flavors(),
+    flavors = sorted(adminclient.OpenManager().list_flavors(),
                      key=lambda flavor: flavor.id)
 
     return render_to_response ('flavors.html', {
