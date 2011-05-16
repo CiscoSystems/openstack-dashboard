@@ -49,12 +49,7 @@ class OpenManager(object):
         self._cp.servers.create(name, im, fl, ipg)
 
     def list_images(self):
-        """ Currently there's an issue with images not returning name that blows
-            up openstack compute """
-        try:
-            return self._cp.images.list()
-        except:
-            return []
+        return self._cp.images.list()
             
     def get_image(self, image_id):
         return self._cp.images.get(image_id)
