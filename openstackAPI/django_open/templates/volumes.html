@@ -12,7 +12,10 @@
   </div>
 
   {% include "_messages.html" %}
-
+  <div>
+       <a id="refresh_list" class="launch" href="javascript:window.location.reload();">Refresh List</a>
+       <a id="top_button" class="launch" href="#">Create Volumes</a>
+  </div>
   <div id="volumes">
       {% if volumes %}
       <table style="width: 100%">
@@ -21,6 +24,8 @@
           <th>Name</th>
           <th>Status</th>
           <th>Size</th>
+          <th>Created</th>
+          <th> </th>
         </tr>
         {% for volume in volumes %}
         <tr class="{% cycle 'odd' 'even' %}">
@@ -28,6 +33,17 @@
             <td>{{ volume.displayName }}</td>
             <td class="odd">{{ volume.status }}</td>
             <td>{{ volume.size }}GB</td>
+            <td>{{ volume.createdAt|date:"Y-m-d H:i"  }}
+            <td>
+              {% if volume.status == "available" %}
+                <form id="form_terminate_{{ volume.id }}" class="form-terminate" method="post" action="{% url novaO_vol_terminate %}" >
+                  <input name="volume_id" type="hidden" value="{{ volume.id }}" />
+                  <input id="terminate_{{volume.id}}" class="terminate" type="submit" value="Delete" />
+                  {% csrf_token %}
+                </form></td>
+              {% else %}
+                  <p class="form-terminate-spacer"> &nbsp; </p>
+              {% endif %}       
         </tr>
         {% endfor %}
       </table>
