@@ -4,6 +4,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 PROD = False
 USE_SSL = False
+ENABLE_VOLUMES = False
 
 LOCAL_PATH = os.path.dirname(os.path.abspath(__file__))
 DATABASES = {
@@ -21,15 +22,8 @@ CACHE_BACKEND = 'dummy://'
 # EMAIL_HOST_USER = 'djangomail'
 # EMAIL_HOST_PASSWORD = 'top-secret!'
 
-NOVA_DEFAULT_ENDPOINT = 'http://localhost:8773/services/Cloud'
-NOVA_DEFAULT_REGION = 'nova'
-NOVA_ACCESS_KEY = 'admin'
-NOVA_SECRET_KEY = 'admin'
-NOVA_ADMIN_USER = 'admin'
-NOVA_PROJECT = 'admin'
+OPENSTACK_ACCESS_KEY  = "long-guid-string"
+OPENSTACK_USER        = 'admin'
+OPENSTACK_MANAGER_URL = r'http://localhost::8774/v1.0/'
+OPENSTACK_1_1_URL     = r'http://localhost::8774/v1.1/'
 
-# Configure these for your outgoing email host
-# EMAIL_HOST = 'smtp.my-company.com'
-# EMAIL_PORT = 25
-## EMAIL_HOST_USER = 'djangomail'
-## EMAIL_HOST_PASSWORD = 'top-secret!'

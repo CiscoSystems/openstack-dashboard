@@ -23,9 +23,11 @@
                 <li {% if sidebar_selected == "keys" %}class="active"{% endif %}>
                   <a id="lnk_keypairs" href="/open/keys">Keys</a>
                 </li>
-                <li {% if sidebar_selected == "volumes" %}{% endif %}>
-                  <a id="lnk_volumes" href="{% url novaO_volumes %}">Volumes</a>
-                </li>
+                {% if ENABLE_VOLUMES %}
+                  <li {% if sidebar_selected == "volumes" %}{% endif %}>
+                    <a id="lnk_volumes" href="{% url novaO_volumes %}">Volumes</a>
+                  </li>
+                {%endif%}
               </ul>
           </div>
       </div>

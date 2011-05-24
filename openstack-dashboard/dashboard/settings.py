@@ -6,9 +6,6 @@ ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.append(ROOT_PATH)
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
-
 SITE_ID = 1
 SITE_BRANDING = 'OpenStack'
 SITE_NAME = 'openstack'
@@ -40,6 +37,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     'django.core.context_processors.media',
     'django.contrib.messages.context_processors.messages',
+    'django_open.context_processors.enable_volumes'
 )
 
 TEMPLATE_LOADERS = (

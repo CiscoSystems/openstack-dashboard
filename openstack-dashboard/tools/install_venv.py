@@ -34,44 +34,61 @@ PIP_REQUIRES = os.path.join(ROOT, 'tools', 'pip-requires')
 PROMPT='--prompt=DASH:'
 
 def die(message, *args):
-  print >>sys.stderr, message % args
-  sys.exit(1)
+    print >> sys.stderr, message % args
+    sys.exit(1)
 
 
-def run_command(cmd, redirect_output=True, check_exit_code=True, cwd=ROOT):
-  """
-  Runs a command in an out-of-process shell, returning the
-  output of that command.  Working directory is ROOT.
-  """
-  if redirect_output:
-    stdout = subprocess.PIPE
-  else:
-    stdout = None
+def run_command(cmd, redirect_output=True, check_exit_code=True, cwd=ROOT,
+                die_message=None):
+    """
+    Runs a command in an out-of-process shell, returning the
+    output of that command.  Working directory is ROOT.
+    """
+    if redirect_output:
+        stdout = subprocess.PIPE
+    else:
+        stdout = None
 
-  proc = subprocess.Popen(cmd, cwd=cwd, stdout=stdout)
-  output = proc.communicate()[0]
-  if check_exit_code and proc.returncode != 0:
-    die('Command "%s" failed.\n%s', ' '.join(cmd), output)
-  return output
+    proc = subprocess.Popen(cmd, cwd=cwd, stdout=stdout)
+    output = proc.communicate()[0]
+    if check_exit_code and proc.returncode != 0:
+        if die_message is None:
+            die('Command "%s" failed.\n%s', ' '.join(cmd), output)
+        else:
+            die(die_message)
+    return output
 
 
-HAS_EASY_INSTALL = bool(run_command(['which', 'easy_install'], check_exit_code=False).strip())
-HAS_VIRTUALENV = bool(run_command(['which', 'virtualenv'], check_exit_code=False).strip())
+HAS_EASY_INSTALL = bool(run_command(['which', 'easy_install'],
+                                    check_exit_code=False).strip())
+HAS_VIRTUALENV = bool(run_command(['which', 'virtualenv'],
+                                  check_exit_code=False).strip())
 
 
 def check_dependencies():
-  """Make sure virtualenv is in the path."""
+    """Make sure virtualenv is in the path."""
 
-  if not HAS_VIRTUALENV:
-    print 'not found.'
-    # Try installing it via easy_install...
-    if HAS_EASY_INSTALL:
-      print 'Installing virtualenv via easy_install...',
-      if not run_command(['which', 'virtualenv']):
-        die('ERROR: virtualenv not found.\n\nevelopment requires virtualenv,'
-            ' please install it using your favorite package management tool')
-      print 'done.'
-  print 'done.'
+    print 'checking dependencies...'
+    if not HAS_VIRTUALENV:
+        print 'not found.'
+        # Try installing it via easy_install...
+        if HAS_EASY_INSTALL:
+            print 'Installing virtualenv via easy_install...',
+            run_command(['easy_install', 'virtualenv'],
+                        die_message='easy_install failed to install virtualenv'
+                                    '\ndevelopment requires virtualenv, please'
+                                    ' install it using your favorite tool')
+            if not run_command(['which', 'virtualenv']):
+                die('ERROR: virtualenv not found in path.\n\ndevelopment '
+                    ' requires virtualenv, please install it using your'
+                    ' favorite package management tool and ensure'
+                    ' virtualenv is in your path')
+            print 'virtualenv installation done.'
+        else:
+            die('easy_install not found.\n\nInstall easy_install'
+                ' (python-setuptools in ubuntu) or virtualenv by hand,'
+                ' then rerun.')
+    print 'dependency check done.'
 
 
 def create_virtualenv(venv=VENV):
@@ -101,7 +118,8 @@ def install_dependencies(venv=VENV):
 
 def install_openstack_compute(venv=VENV):
     print 'Installing openstack-compute ...'
-    run_command([WITH_VENV, 'pip', 'install', '-E', venv, '-e', 'git://github.com/jacobian/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg'],
+    run_command([WITH_VENV, 'pip', 'install', '-E', venv, '-e',
+                 'git://github.com/jacobian/openstack.compute.git#egg=openstack.compute-2.0a1-py2.6.egg'],
                 redirect_output=False)
 
 def install_django_open():
