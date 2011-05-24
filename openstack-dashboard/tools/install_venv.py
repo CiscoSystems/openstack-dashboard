@@ -124,7 +124,7 @@ def install_openstack_compute(venv=VENV):
 
 def install_django_open():
     print 'Installing django_open ...'
-    path = os.path.join(ROOT, '..', 'openstackAPI')
+    path = os.path.join(ROOT, '..', 'django-openstack-api')
     run_command([WITH_VENV, 'python', 'setup.py', 'develop'], cwd=path)
 
 
