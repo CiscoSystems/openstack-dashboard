@@ -10,3 +10,6 @@ openstack-dashboard/.dashboard-venv
 openstack-dashboard/local/dashboard_openstack.sqlite3
 openstack-dashboard/local/local_settings.py
 openstack-dashboard.iml
+.idea/
+django-openstack/src/django_openstack.egg-info/
+
