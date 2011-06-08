@@ -150,10 +150,12 @@ class ProjectManagerTests(test.TestCase):
 
         conn_mock = self.stub_conn_mock(count=2)
 
+        # Test: default attributes passed
         conn_mock.modify_image_attribute(TEST_IMAGE_ID, 
                                          attribute=None, 
                                          operation=None, 
                                          groups='all').AndReturn(TEST_RETURN)
+        # Test: custom attributes passed
         conn_mock.modify_image_attribute(TEST_IMAGE_ID, 
                                          attribute=TEST_ATTRIBUTE, 
                                          operation=TEST_OPERATION, 
@@ -173,12 +175,43 @@ class ProjectManagerTests(test.TestCase):
         self.mox.VerifyAll()
 
     def test_run_instances(self):
-        """docstring for test_run_instances"""
-        pass
+        TEST_RETURN = 'testReturnValue'
+
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.run_instances(TEST_IMAGE_ID,
+                                key_name='testKey',
+                                user_data='userData').AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+        
+        run_return = self.manager.run_instances(TEST_IMAGE_ID, 
+                                                key_name='testKey',
+                                                user_data='userData')
+        self.assertEqual(run_return, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_get_instance_count(self):
-        """docstring for get_instance_count"""
-        pass
+        TEST_LEN = 5
+        self.mox.StubOutWithMock(self.manager, 'get_instances')
+
+        def valid_instance_list():
+            self.manager.get_instances().AndReturn([i for i in range(TEST_LEN)])
+            self.mox.ReplayAll()
+            self.assertEqual(TEST_LEN, self.manager.get_instance_count())
+            self.mox.VerifyAll()
+            self.mox.ResetAll()
+
+        def invalid_instance_list():
+            self.manager.get_instances().AndReturn(None)
+            self.mox.ReplayAll()
+            self.assertTrue(self.manager.get_instance_count() is None)
+            self.mox.VerifyAll()
+            self.mox.ResetAll()
+
+        valid_instance_list()
+        invalid_instance_list()
 
     def test_get_instances(self):
         """docstring for get_instances"""
