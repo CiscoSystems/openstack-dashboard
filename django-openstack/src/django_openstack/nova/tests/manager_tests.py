@@ -1,14 +1,17 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
+import boto
 import mox
 
+from boto.ec2.connection import EC2Connection
 from django import test
 from django_openstack.core import connection
 from django_openstack.nova.manager import ProjectManager
+from mox import And, IgnoreArg, In
 from nova_adminclient import client as nova_client
 
 
-TEST_USER = 'testUser'
+TEST_IMAGE_ID = 1
 TEST_PROJECT_NAME = 'testProject'
 TEST_PROJECT_DESCRIPTION = 'testDescription'
 TEST_PROJECT_MANAGER_ID = 100
@@ -16,22 +19,34 @@ TEST_PROJECT_MEMBER_IDS = []
 TEST_REGION_ENDPOINT = 'http://testServer:8773/services/Cloud'
 TEST_REGION_NAME = 'testRegion'
 TEST_REGION = {'endpoint': TEST_REGION_ENDPOINT, 'name': TEST_REGION_NAME}
+TEST_USER = 'testUser'
 
 
 class ProjectManagerTests(test.TestCase):
     def setUp(self):
         self.mox = mox.Mox()
-        self.project = nova_client.ProjectInfo()
-        self.project.projectname = TEST_PROJECT_NAME
-        self.project.description = TEST_PROJECT_DESCRIPTION
-        self.project.projectManagerId = TEST_PROJECT_MANAGER_ID
-        self.project.memberIds = TEST_PROJECT_MEMBER_IDS
+        project = nova_client.ProjectInfo()
+        project.projectname = TEST_PROJECT_NAME
+        project.projectManagerId = TEST_PROJECT_MANAGER_ID
+
+        self.manager = ProjectManager(TEST_USER, project, TEST_REGION)
 
     def tearDown(self):
         self.mox.UnsetStubs()
 
+    def stub_conn_mock(self, count=1):
+        ''' 
+        Stubs get_openstack_connection as an EC2Connection and returns the
+        EC2Connection mock 
+        '''
+        self.mox.StubOutWithMock(self.manager, 'get_openstack_connection')
+        conn_mock = self.mox.CreateMock(EC2Connection)
+        for i in range(count):
+            self.manager.get_openstack_connection().AndReturn(conn_mock)
+        return conn_mock
+
+
     def test_get_openstack_connection(self):
-        manager = ProjectManager(TEST_USER, self.project, TEST_REGION)
         self.mox.StubOutWithMock(connection, 'get_nova_admin_connection')
         admin_mock = self.mox.CreateMock(nova_client.NovaAdminClient)
         admin_mock.connection_for(TEST_USER, TEST_PROJECT_NAME,
@@ -41,33 +56,121 @@ class ProjectManagerTests(test.TestCase):
 
         self.mox.ReplayAll()
 
-        manager.get_openstack_connection()
+        self.manager.get_openstack_connection()
 
         self.mox.VerifyAll()
 
     def test_get_zip(self):
-        """docstring for test_get_zip"""
-        pass
+        self.mox.StubOutWithMock(connection, 'get_nova_admin_connection')
+        admin_mock = self.mox.CreateMock(nova_client.NovaAdminClient)
+        admin_mock.get_zip(TEST_USER, TEST_PROJECT_NAME)
+        connection.get_nova_admin_connection().AndReturn(admin_mock)
+
+        self.mox.ReplayAll()
+
+        self.manager.get_zip()
+
+        self.mox.VerifyAll()
 
     def test_get_images(self):
-        """docstring for test_get_images"""
-        pass
+        ''' TODO: Need to figure out what I'm doing here...'''
+        self.assertTrue(False)
+        TEST_IMAGE_IDS = [TEST_IMAGE_ID,TEST_IMAGE_ID + 1]
+        self.mox.StubOutwithMock(self.manager, 'get_openstack_connection')
+        conn_mock = self.mox.CreateMock(EC2Connection)
+        images_mock = self.mox.CreateMockAnything()
+        
 
     def test_get_image(self):
-        """docstring for test_get_image"""
-        pass
+        TEST_IMAGE_BAD_ID = TEST_IMAGE_ID + 1
+        self.mox.StubOutWithMock(self.manager, 'get_images')
+        self.manager.get_images(image_ids=[TEST_IMAGE_ID]).AndReturn([TEST_IMAGE_ID])
+        self.manager.get_images(image_ids=[TEST_IMAGE_BAD_ID]).AndReturn([])
+
+        self.mox.ReplayAll()
+
+        image_result = self.manager.get_image(TEST_IMAGE_ID)
+        self.assertEqual(TEST_IMAGE_ID, image_result)
+        
+        image_result = self.manager.get_image(TEST_IMAGE_BAD_ID)
+        self.assertTrue(image_result is None)
+
+        self.mox.VerifyAll()
 
     def test_deregister_image(self):
-        """docstring for test_deregister_image"""
-        pass
+        conn_mock = self.stub_conn_mock()
+        conn_mock.deregister_image(TEST_IMAGE_ID).AndReturn(TEST_IMAGE_ID)
+
+        self.mox.ReplayAll()
+
+        deregistered_id = self.manager.deregister_image(TEST_IMAGE_ID)
+
+        self.assertEqual(deregistered_id, TEST_IMAGE_ID)
+
+        self.mox.VerifyAll()
+
 
     def test_update_image(self):
-        """docstring for test_update_image"""
-        pass
+        TEST_DISPLAY_NAME = 'testDisplayName'
+        TEST_DESCRIPTION = 'testDescription'
+        TEST_RETURN = 'testReturnString'
+
+        conn_mock = self.stub_conn_mock(count=2)
+
+        # TODO: Figure out why the arg parsing isn't working... 
+        conn_mock.get_object('UpdateImage', 
+                             #And(In(TEST_IMAGE_ID), In(TEST_DISPLAY_NAME),
+                             #    In(TEST_DESCRIPTION)),
+                             IgnoreArg(),
+                             boto.ec2.image.Image).AndReturn(TEST_RETURN)
+        conn_mock.get_object('UpdateImage',
+                             #And(In(TEST_IMAGE_ID), In(None)),
+                             IgnoreArg(),
+                             boto.ec2.image.Image).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        update_result = self.manager.update_image(TEST_IMAGE_ID, 
+                                  display_name=TEST_DISPLAY_NAME, 
+                                  description=TEST_DESCRIPTION)
+
+        self.assertEqual(update_result, TEST_RETURN)
+
+        update_result = self.manager.update_image(TEST_IMAGE_ID)
+
+        self.assertEqual(update_result, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_modify_image_attribute(self):
-        """docstring for test_modify_image_attribute"""
-        pass
+        TEST_RETURN = 'testReturnValue'
+        TEST_ATTRIBUTE = 'testAttribute'
+        TEST_OPERATION = 'testOperation'
+        TEST_GROUPS = 'testGroups'
+
+        conn_mock = self.stub_conn_mock(count=2)
+
+        conn_mock.modify_image_attribute(TEST_IMAGE_ID, 
+                                         attribute=None, 
+                                         operation=None, 
+                                         groups='all').AndReturn(TEST_RETURN)
+        conn_mock.modify_image_attribute(TEST_IMAGE_ID, 
+                                         attribute=TEST_ATTRIBUTE, 
+                                         operation=TEST_OPERATION, 
+                                         groups=TEST_GROUPS).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        modify_return = self.manager.modify_image_attribute(TEST_IMAGE_ID)
+        self.assertEqual(modify_return, TEST_RETURN)
+
+        modify_return = self.manager.modify_image_attribute(TEST_IMAGE_ID,
+                                                            attribute=TEST_ATTRIBUTE,
+                                                            operation=TEST_OPERATION,
+                                                            groups=TEST_GROUPS)
+        self.assertEqual(modify_return, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_run_instances(self):
         """docstring for test_run_instances"""
