@@ -7,13 +7,14 @@ from boto.ec2.connection import EC2Connection
 from django import test
 from django_openstack.core import connection
 from django_openstack.nova.manager import ProjectManager
-from mox import And, IgnoreArg, In
+from mox import And, ContainsKeyValue, IgnoreArg, In, IsA
 from nova_adminclient import client as nova_client
 
 
 TEST_IMAGE_ID = 1
 TEST_INSTANCE_ID = 1
 TEST_INSTANCE_IDS = range(8)
+TEST_INSTANCE_NAME = 'testInstance'
 TEST_PROJECT_NAME = 'testProject'
 TEST_PROJECT_DESCRIPTION = 'testDescription'
 TEST_PROJECT_MANAGER_ID = 100
@@ -117,15 +118,17 @@ class ProjectManagerTests(test.TestCase):
 
         conn_mock = self.stub_conn_mock(count=2)
 
-        # TODO: Figure out why the arg parsing isn't working...
-        conn_mock.get_object('UpdateImage',
-                             #And(In(TEST_IMAGE_ID), In(TEST_DISPLAY_NAME),
-                             #    In(TEST_DESCRIPTION)),
-                             IgnoreArg(),
+        conn_mock.get_object('UpdateImage', And(
+                             ContainsKeyValue('ImageId', TEST_IMAGE_ID),
+                             ContainsKeyValue('DisplayName', TEST_DISPLAY_NAME),
+                             ContainsKeyValue('Description', TEST_DESCRIPTION)
+                             ),
                              boto.ec2.image.Image).AndReturn(TEST_RETURN)
-        conn_mock.get_object('UpdateImage',
-                             #And(In(TEST_IMAGE_ID), In(None)),
-                             IgnoreArg(),
+        conn_mock.get_object('UpdateImage', And(
+                             ContainsKeyValue('ImageId', TEST_IMAGE_ID),
+                             ContainsKeyValue('DisplayName', None),
+                             ContainsKeyValue('Description', None)
+                             ),
                              boto.ec2.image.Image).AndReturn(TEST_RETURN)
 
         self.mox.ReplayAll()
@@ -326,19 +329,78 @@ class ProjectManagerTests(test.TestCase):
         instance_missing()
 
     def test_update_instance(self):
-        pass
+        TEST_DESCRIPTION = 'testDescription'
+        TEST_RETURN = 'returnValue'
+        conn_mock = self.stub_conn_mock()
+        conn_mock.get_object('UpdateInstance', And(
+                             ContainsKeyValue('InstanceId',
+                                              TEST_INSTANCE_ID),
+                             ContainsKeyValue('DisplayName',
+                                              TEST_INSTANCE_NAME),
+                             ContainsKeyValue('DisplayDescription',
+                                              TEST_DESCRIPTION),
+                             ),
+                boto.ec2.instance.Instance).AndReturn(TEST_RETURN)
+
+        updates = {'nickname': TEST_INSTANCE_NAME,
+                   'description': TEST_DESCRIPTION}
+
+        self.mox.ReplayAll()
+
+        retVal = self.manager.update_instance(TEST_INSTANCE_ID, updates)
+        self.assertEqual(retVal, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_get_instance_graph(self):
-        pass
+        self.assertTrue(False)
 
     def test_terminate_instance(self):
-        pass
+        conn_mock = self.stub_conn_mock()
+        conn_mock.terminate_instances([TEST_INSTANCE_ID])
+
+        self.mox.ReplayAll()
+
+        self.manager.terminate_instance(TEST_INSTANCE_ID)
+
+        self.mox.VerifyAll()
 
     def test_get_security_groups(self):
-        pass
+        TEST_SECURITY_GROUPS=['group1', 'group2']
+
+        conn_mock = self.stub_conn_mock()
+        conn_mock.get_all_security_groups().AndReturn(TEST_SECURITY_GROUPS)
+
+        self.mox.ReplayAll()
+        
+        groups = self.manager.get_security_groups()
+        # Upgrade to 2.7 to make this work
+        # self.assertItemsEqual(groups, TEST_SECURITY_GROUPS)
+        for group in groups:
+             self.assertTrue(group in TEST_SECURITY_GROUPS)
 
     def test_get_security_group(self):
-        pass
+        TEST_SECURITY_GROUP_NAME = 'group1'
+        TEST_RETURN = 'returnValue'
+        conn_mock = self.stub_conn_mock(count=2)
+        conn_mock.get_all_security_groups(
+                groupnames=TEST_SECURITY_GROUP_NAME.encode('ascii')
+                ).AndReturn([TEST_RETURN])
+        conn_mock.get_all_security_groups(
+                groupnames=TEST_SECURITY_GROUP_NAME.encode('ascii')
+                ).AndReturn([])
+
+        self.mox.ReplayAll()
+
+        # Something is there
+        group = self.manager.get_security_group(TEST_SECURITY_GROUP_NAME)
+        self.assertEqual(group, TEST_RETURN)
+
+        # Nothing is there
+        group = self.manager.get_security_group(TEST_SECURITY_GROUP_NAME)
+        self.assertEqual(group, None)
+
+        self.mox.VerifyAll()
 
     def test_has_security_group(self):
         pass
