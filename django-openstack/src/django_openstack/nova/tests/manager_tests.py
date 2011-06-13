@@ -7,21 +7,26 @@ from boto.ec2.connection import EC2Connection
 from django import test
 from django_openstack.core import connection
 from django_openstack.nova.manager import ProjectManager
-from mox import And, ContainsKeyValue, IgnoreArg, In, IsA
+from mox import And, ContainsKeyValue, IgnoreArg
 from nova_adminclient import client as nova_client
 
 
+TEST_DESCRIPTION = 'testDescription'
+TEST_FROM_PORT = 1024
 TEST_IMAGE_ID = 1
 TEST_INSTANCE_ID = 1
 TEST_INSTANCE_IDS = range(8)
 TEST_INSTANCE_NAME = 'testInstance'
-TEST_PROJECT_NAME = 'testProject'
 TEST_PROJECT_DESCRIPTION = 'testDescription'
 TEST_PROJECT_MANAGER_ID = 100
 TEST_PROJECT_MEMBER_IDS = []
+TEST_PROJECT_NAME = 'testProject'
+TEST_PROTOCOL = 'tcp'
 TEST_REGION_ENDPOINT = 'http://testServer:8773/services/Cloud'
 TEST_REGION_NAME = 'testRegion'
 TEST_REGION = {'endpoint': TEST_REGION_ENDPOINT, 'name': TEST_REGION_NAME}
+TEST_SECURITY_GROUP_NAME = 'testGroup'
+TEST_TO_PORT = 2048
 TEST_USER = 'testUser'
 
 
@@ -76,7 +81,7 @@ class ProjectManagerTests(test.TestCase):
 
     def test_get_images(self):
         ''' TODO: Need to figure out what I'm doing here...'''
-        self.assertTrue(False)
+        self.assertTrue(False, "Intentional Failure")
         TEST_IMAGE_IDS = [TEST_IMAGE_ID, TEST_IMAGE_ID + 1]
         self.mox.StubOutwithMock(self.manager, 'get_openstack_connection')
         conn_mock = self.mox.CreateMock(EC2Connection)
@@ -113,14 +118,14 @@ class ProjectManagerTests(test.TestCase):
 
     def test_update_image(self):
         TEST_DISPLAY_NAME = 'testDisplayName'
-        TEST_DESCRIPTION = 'testDescription'
         TEST_RETURN = 'testReturnString'
 
         conn_mock = self.stub_conn_mock(count=2)
 
         conn_mock.get_object('UpdateImage', And(
                              ContainsKeyValue('ImageId', TEST_IMAGE_ID),
-                             ContainsKeyValue('DisplayName', TEST_DISPLAY_NAME),
+                             ContainsKeyValue('DisplayName',
+                                              TEST_DISPLAY_NAME),
                              ContainsKeyValue('Description', TEST_DESCRIPTION)
                              ),
                              boto.ec2.image.Image).AndReturn(TEST_RETURN)
@@ -329,7 +334,6 @@ class ProjectManagerTests(test.TestCase):
         instance_missing()
 
     def test_update_instance(self):
-        TEST_DESCRIPTION = 'testDescription'
         TEST_RETURN = 'returnValue'
         conn_mock = self.stub_conn_mock()
         conn_mock.get_object('UpdateInstance', And(
@@ -353,7 +357,7 @@ class ProjectManagerTests(test.TestCase):
         self.mox.VerifyAll()
 
     def test_get_instance_graph(self):
-        self.assertTrue(False)
+        self.assertTrue(False, "Incomplete Test")
 
     def test_terminate_instance(self):
         conn_mock = self.stub_conn_mock()
@@ -366,21 +370,20 @@ class ProjectManagerTests(test.TestCase):
         self.mox.VerifyAll()
 
     def test_get_security_groups(self):
-        TEST_SECURITY_GROUPS=['group1', 'group2']
+        TEST_SECURITY_GROUPS = ['group1', 'group2']
 
         conn_mock = self.stub_conn_mock()
         conn_mock.get_all_security_groups().AndReturn(TEST_SECURITY_GROUPS)
 
         self.mox.ReplayAll()
-        
+
         groups = self.manager.get_security_groups()
         # Upgrade to 2.7 to make this work
         # self.assertItemsEqual(groups, TEST_SECURITY_GROUPS)
         for group in groups:
-             self.assertTrue(group in TEST_SECURITY_GROUPS)
+            self.assertTrue(group in TEST_SECURITY_GROUPS)
 
     def test_get_security_group(self):
-        TEST_SECURITY_GROUP_NAME = 'group1'
         TEST_RETURN = 'returnValue'
         conn_mock = self.stub_conn_mock(count=2)
         conn_mock.get_all_security_groups(
@@ -403,22 +406,146 @@ class ProjectManagerTests(test.TestCase):
         self.mox.VerifyAll()
 
     def test_has_security_group(self):
-        pass
+        self.mox.StubOutWithMock(self.manager, 'get_security_group')
+
+        self.manager.get_security_group(TEST_SECURITY_GROUP_NAME).AndReturn(
+                TEST_SECURITY_GROUP_NAME)
+        self.manager.get_security_group(TEST_SECURITY_GROUP_NAME).AndReturn(
+                None)
+
+        self.mox.ReplayAll()
+
+        # security group exists
+        self.assertTrue(
+                self.manager.has_security_group(TEST_SECURITY_GROUP_NAME))
+
+        # security group does not exist
+        self.assertFalse(
+                self.manager.has_security_group(TEST_SECURITY_GROUP_NAME))
+
+        self.mox.VerifyAll()
 
     def test_create_security_group(self):
-        pass
+        TEST_RETURN = 'returnValue'
+
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.create_security_group(TEST_SECURITY_GROUP_NAME,
+                                        TEST_DESCRIPTION
+                                       ).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.create_security_group(TEST_SECURITY_GROUP_NAME,
+                                                    TEST_DESCRIPTION)
+
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_delete_security_group(self):
-        pass
+        TEST_RETURN = 'returnVAlue'
+
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.delete_security_group(
+                name=TEST_SECURITY_GROUP_NAME).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.delete_security_group(TEST_SECURITY_GROUP_NAME)
+
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_authorize_security_group(self):
-        pass
+        TEST_RETURN = 'returnValue'
+
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.authorize_security_group(group_name=TEST_SECURITY_GROUP_NAME,
+                                           ip_protocol=TEST_PROTOCOL,
+                                           from_port=TEST_FROM_PORT,
+                                           to_port=TEST_TO_PORT,
+                                           cidr_ip=IgnoreArg()
+                                          ).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.authorize_security_group(
+                                              TEST_SECURITY_GROUP_NAME,
+                                              TEST_PROTOCOL,
+                                              TEST_FROM_PORT,
+                                              TEST_TO_PORT
+                                              )
+
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_revoke_security_group(self):
-        pass
+        TEST_RETURN = 'returnValue'
+
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.revoke_security_group(group_name=TEST_SECURITY_GROUP_NAME,
+                                        ip_protocol=TEST_PROTOCOL,
+                                        from_port=TEST_FROM_PORT,
+                                        to_port=TEST_TO_PORT,
+                                        cidr_ip=IgnoreArg()
+                                       ).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.revoke_security_group(
+                                              TEST_SECURITY_GROUP_NAME,
+                                              TEST_PROTOCOL,
+                                              TEST_FROM_PORT,
+                                              TEST_TO_PORT
+                                              )
+
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_get_key_pairs(self):
-        pass
+        '''TODO: This test is broken'''
+        def create_key_pair(name):
+            k = object()
+            k.name = name
+            return k
+
+        TEST_KEYPAIRS = map(create_key_pair, ('key1', 'key2', 'key3', 'key4'))
+        TEST_BAD_KEYPAIR = map(create_key_pair, ('vpn-key'))
+        TEST_KEYPAIRS_EMPTY = []
+
+        conn_mock = self.stub_conn_mock()
+        conn_mock.get_all_key_pairs().AndReturn(TEST_KEYPAIRS)
+        conn_mock.get_all_key_pairs().AndReturn(TEST_KEYPAIRS + TEST_BAD_KEYPAIR)
+        conn_mock.get_all_key_pairs().AndReturn(TEST_KEYPAIRS_EMPTY)
+
+        self.mox.ReplayAll()
+
+        # all keys valid
+        keypairs = self.manager.get_key_pairs()
+        # upgrade to 2.7 to use this instead
+        # self.assertItemsEqual(keypairs, TEST_KEYPAIRS)
+        for keypair in keypairs:
+            self.assertTrue(keypair in TEST_KEYPAIRS)
+
+        # special vpn-key should be omitted
+        keypairs = self.manager.get_key_pairs()
+        # upgrade to 2.7 to use this instead
+        # self.assertItemsEqual(keypairs, TEST_KEYPAIRS)
+        for keypair in keypairs:
+            self.assertTrue(keypair in TEST_KEYPAIRS)
+        
+        # empty list
+        keypairs = self.manager.get_key_pairs()
+        self.assertEqual(len(keypairs), 0)
+
+        self.mox.VerifyAll()
 
     def test_get_key_pair(self):
         pass
