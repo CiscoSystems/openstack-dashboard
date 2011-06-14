@@ -5,9 +5,10 @@ import mox
 
 from boto.ec2.connection import EC2Connection
 from django import test
+from django.conf import settings
 from django_openstack.core import connection
 from django_openstack.nova.manager import ProjectManager
-from mox import And, ContainsKeyValue, IgnoreArg
+from mox import And, ContainsKeyValue, IgnoreArg, IsA, StrContains
 from nova_adminclient import client as nova_client
 
 
@@ -17,8 +18,8 @@ TEST_IMAGE_ID = 1
 TEST_INSTANCE_ID = 1
 TEST_INSTANCE_IDS = range(8)
 TEST_INSTANCE_NAME = 'testInstance'
-TEST_KEYPAIR_BAD_NAMES = ('vpn-key',) # needs to be a list
-TEST_KEYPAIR_NAMES = ('key1', 'key2', 'key3', 'key4')
+TEST_KEYPAIR_BAD_NAMES = ['vpn-key']
+TEST_KEYPAIR_NAMES = ['key1', 'key2', 'key3', 'key4']
 TEST_PROJECT_DESCRIPTION = 'testDescription'
 TEST_PROJECT_MANAGER_ID = 100
 TEST_PROJECT_MEMBER_IDS = []
@@ -29,8 +30,13 @@ TEST_REGION_NAME = 'testRegion'
 TEST_REGION = {'endpoint': TEST_REGION_ENDPOINT, 'name': TEST_REGION_NAME}
 TEST_RETURN = 'testReturn'
 TEST_SECURITY_GROUP_NAME = 'testGroup'
+TEST_SIZE = 3
+TEST_SNAPSHOT = 'aSnapshot'
 TEST_TO_PORT = 2048
 TEST_USER = 'testUser'
+TEST_OTHERUSER = 'otherUser'
+TEST_VOLUME_ID = 1000
+TEST_VOLUME_NAME = 'testVolume'
 
 
 class ProjectManagerTests(test.TestCase):
@@ -83,12 +89,106 @@ class ProjectManagerTests(test.TestCase):
         self.mox.VerifyAll()
 
     def test_get_images(self):
-        ''' TODO: Need to figure out what I'm doing here...'''
-        self.assertTrue(False, "Intentional Failure")
-        TEST_IMAGE_IDS = [TEST_IMAGE_ID, TEST_IMAGE_ID + 1]
-        self.mox.StubOutwithMock(self.manager, 'get_openstack_connection')
-        conn_mock = self.mox.CreateMock(EC2Connection)
-        images_mock = self.mox.CreateMockAnything()
+        def create_fake_image(location='nova', image_type='machine',
+                              owner=TEST_USER):
+            class fakeimage(object):
+                def __init__(self, location, image_type, owner):
+                    self.location = str(location)
+                    self.type = image_type
+                    self.ownerId = owner
+            return fakeimage(location, image_type, owner)
+
+        def test_correct_sorting():
+            conn_mock = self.stub_conn_mock()
+
+            images_owner_other = [create_fake_image(owner=TEST_OTHERUSER)
+                                  for i in range(3)]
+            images_owner_self = [create_fake_image() for i in range(3)]
+            # images in reverse expected order
+            images = images_owner_other + images_owner_self
+
+            conn_mock.get_all_images(image_ids=None).AndReturn(images)
+
+            self.mox.ReplayAll()
+
+            ret_images = self.manager.get_images()
+            self.assertEqual(len(ret_images), 6)
+            # owner_images should be first
+            for image in images_owner_self:
+                self.assertTrue(image in ret_images[:3])
+
+            # non-owner_images should be last
+            for image in images_owner_other:
+                self.assertTrue(image in ret_images[3:])
+
+            self.mox.VerifyAll()
+            self.mox.UnsetStubs()
+
+        def test_type_filtering():
+            conn_mock = self.stub_conn_mock()
+
+            images_machine = [create_fake_image() for i in range(3)]
+            images_fake = [create_fake_image(image_type='fake')
+                           for i in range(3)]
+            images = images_machine + images_fake
+
+            conn_mock.get_all_images(image_ids=None).AndReturn(images)
+
+            self.mox.ReplayAll()
+
+            ret_images = self.manager.get_images()
+            self.assertEqual(len(ret_images), 3)
+
+            for image in ret_images:
+                self.assertTrue(image in images_machine)
+                self.assertTrue(image not in images_fake)
+
+            self.mox.VerifyAll()
+            self.mox.UnsetStubs()
+
+        def test_location_filtering():
+            conn_mock = self.stub_conn_mock()
+
+            images_openstack = [create_fake_image(location='openstack/foobar')
+                                for i in range(3)]
+            images_nova = [create_fake_image(location='nova/foobar')
+                           for i in range(3)]
+
+            images = images_openstack + images_nova
+
+            conn_mock.get_all_images(image_ids=None).AndReturn(images)
+
+            self.mox.ReplayAll()
+
+            ret_images = self.manager.get_images()
+            self.assertEqual(len(ret_images), 3)
+
+            for image in ret_images:
+                self.assertTrue(image in images_nova)
+                self.assertTrue(image not in images_openstack)
+
+            self.mox.VerifyAll()
+            self.mox.UnsetStubs()
+
+        def test_image_ids_handling():
+            conn_mock = self.stub_conn_mock()
+
+            images = [create_fake_image() for i in range(3)]
+
+            conn_mock.get_all_images(
+                    image_ids=[TEST_IMAGE_ID]).AndReturn(images)
+
+            self.mox.ReplayAll()
+
+            self.manager.get_images(image_ids=[TEST_IMAGE_ID])
+
+            self.mox.VerifyAll()
+            self.mox.UnsetStubs()
+
+        test_correct_sorting()
+        test_type_filtering()
+        test_location_filtering()
+        test_image_ids_handling()
 
     def test_get_image(self):
         TEST_IMAGE_BAD_ID = TEST_IMAGE_ID + 1
@@ -272,8 +372,6 @@ class ProjectManagerTests(test.TestCase):
             instances = self.manager.get_instances()
             self.assertEqual(len(TEST_INSTANCE_IDS), len(instances))
             instance_ids = [instance.id for instance in instances]
-            # Upgrade to 2.7 to make this work
-            # self.assertItemsEqual(instance_ids, TEST_INSTANCE_IDS)
             for instance_id in instance_ids:
                 self.assertTrue(instance_id in TEST_INSTANCE_IDS)
 
@@ -355,7 +453,84 @@ class ProjectManagerTests(test.TestCase):
         self.mox.VerifyAll()
 
     def test_get_instance_graph(self):
-        self.assertTrue(False, "Incomplete Test")
+        TEST_GRAPH_NAME = 'testGraph'
+
+        def get_s3_mocks():
+            self.mox.StubOutClassWithMocks(boto.s3.connection, 'S3Connection')
+
+            s3_conn_mock = boto.s3.connection.S3Connection(
+                aws_access_key_id=settings.NOVA_ACCESS_KEY,
+                aws_secret_access_key=settings.NOVA_SECRET_KEY,
+                is_secure=False,
+                calling_format=IsA(boto.s3.connection.OrdinaryCallingFormat),
+                port=3333,
+                host=settings.NOVA_CLC_IP)
+            bucket_mock = self.mox.CreateMock(boto.s3.bucket.Bucket)
+            key_mock = self.mox.CreateMock(boto.s3.key.Key)
+
+            return (s3_conn_mock, bucket_mock, key_mock)
+
+        def test_bucket_exists_key_exists():
+            (s3_conn_mock, bucket_mock, key_mock) = get_s3_mocks()
+
+            s3_conn_mock.get_bucket(StrContains(str(TEST_INSTANCE_ID)),
+                                    validate=False).AndReturn(bucket_mock)
+
+            bucket_mock.get_key(TEST_GRAPH_NAME).AndReturn(key_mock)
+
+            key_mock.read().AndReturn(TEST_RETURN)
+
+            self.mox.ReplayAll()
+
+            retval = self.manager.get_instance_graph(TEST_REGION,
+                                                     TEST_INSTANCE_ID,
+                                                     TEST_GRAPH_NAME)
+            self.assertEqual(retval, TEST_RETURN)
+
+            self.mox.VerifyAll()
+            self.mox.UnsetStubs()
+
+        def test_NoSuchBucket():
+            (s3_conn_mock, bucket_mock, key_mock) = get_s3_mocks()
+            exception = boto.exception.S3ResponseError(None, None)
+            exception.error_code = "NoSuchBucket"
+
+            s3_conn_mock.get_bucket(StrContains(str(TEST_INSTANCE_ID)),
+                                    validate=False).AndRaise(exception)
+
+            self.mox.ReplayAll()
+
+            retval = self.manager.get_instance_graph(TEST_REGION,
+                                                     TEST_INSTANCE_ID,
+                                                     TEST_GRAPH_NAME)
+
+            self.assertTrue(retval is None)
+
+            self.mox.VerifyAll()
+            self.mox.UnsetStubs()
+
+        def test_other_error():
+            (s3_conn_mock, bucket_mock, key_mock) = get_s3_mocks()
+
+            exception = boto.exception.S3ResponseError(None, None)
+            exception.error_code = "FatalError"
+
+            s3_conn_mock.get_bucket(StrContains(str(TEST_INSTANCE_ID)),
+                                    validate=False).AndRaise(exception)
+
+            self.mox.ReplayAll()
+
+            with self.assertRaises(boto.exception.S3ResponseError):
+                self.manager.get_instance_graph(TEST_REGION,
+                                                TEST_INSTANCE_ID,
+                                                TEST_GRAPH_NAME)
+
+            self.mox.VerifyAll()
+            self.mox.UnsetStubs()
+
+        test_bucket_exists_key_exists()
+        test_NoSuchBucket()
+        test_other_error()
 
     def test_terminate_instance(self):
         conn_mock = self.stub_conn_mock()
@@ -363,7 +538,8 @@ class ProjectManagerTests(test.TestCase):
 
         self.mox.ReplayAll()
 
-        self.manager.terminate_instance(TEST_INSTANCE_ID)
+        retval = self.manager.terminate_instance(TEST_INSTANCE_ID)
+        self.assertTrue(retval is None)
 
         self.mox.VerifyAll()
 
@@ -376,8 +552,6 @@ class ProjectManagerTests(test.TestCase):
         self.mox.ReplayAll()
 
         groups = self.manager.get_security_groups()
-        # Upgrade to 2.7 to make this work
-        # self.assertItemsEqual(groups, TEST_SECURITY_GROUPS)
         for group in groups:
             self.assertTrue(group in TEST_SECURITY_GROUPS)
 
@@ -511,7 +685,8 @@ class ProjectManagerTests(test.TestCase):
 
         conn_mock = self.stub_conn_mock(count=3)
         conn_mock.get_all_key_pairs().AndReturn(TEST_KEYPAIRS)
-        conn_mock.get_all_key_pairs().AndReturn(TEST_KEYPAIRS + TEST_BAD_KEYPAIRS)
+        conn_mock.get_all_key_pairs().AndReturn(TEST_KEYPAIRS +
+                                                TEST_BAD_KEYPAIRS)
         conn_mock.get_all_key_pairs().AndReturn(TEST_KEYPAIRS_EMPTY)
 
         self.mox.ReplayAll()
@@ -521,7 +696,7 @@ class ProjectManagerTests(test.TestCase):
         # upgrade to 2.7 to use this instead
         # self.assertItemsEqual(keypairs, TEST_KEYPAIRS)
         for keypair in keypairs:
-            self.assertTrue(keypair in TEST_KEYPAIRS, 
+            self.assertTrue(keypair in TEST_KEYPAIRS,
                     '%s missing from returned keypairs' % keypair.name)
 
         # special vpn-key should be omitted
@@ -531,7 +706,7 @@ class ProjectManagerTests(test.TestCase):
                     '%s present in returned keypairs' % keypair.name)
             self.assertTrue(keypair in TEST_KEYPAIRS,
                     '%s missing from returned keypairs' % keypair.name)
-        
+
         # empty list
         keypairs = self.manager.get_key_pairs()
         self.assertEqual(len(keypairs), 0)
@@ -562,7 +737,7 @@ class ProjectManagerTests(test.TestCase):
         self.mox.StubOutWithMock(self.manager, 'get_key_pair')
         self.manager.get_key_pair(TEST_KEYPAIR_NAMES[0]).AndReturn(TEST_RETURN)
         self.manager.get_key_pair(TEST_KEYPAIR_NAMES[0]).AndReturn(None)
-        
+
         self.mox.ReplayAll()
 
         self.assertTrue(self.manager.has_key_pair(TEST_KEYPAIR_NAMES[0]))
@@ -584,19 +759,94 @@ class ProjectManagerTests(test.TestCase):
         self.mox.VerifyAll()
 
     def test_delete_key_pair(self):
-        pass
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.delete_key_pair(
+                TEST_KEYPAIR_NAMES[0]).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.delete_key_pair(TEST_KEYPAIR_NAMES[0])
+        self.assertEqual(retval, None)
+
+        self.mox.VerifyAll()
 
     def test_get_volumes(self):
-        pass
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.get_all_volumes().AndReturn('testReturn')
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.get_volumes()
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_create_volume(self):
-        pass
+        def mock_create_volume_params(size, d_name, d_descript, snapshot):
+            return And(ContainsKeyValue('Size', size),
+                       ContainsKeyValue('DisplayName', d_name),
+                       ContainsKeyValue('DisplayDescription', d_descript))
+
+        conn_mock = self.stub_conn_mock(count=2)
+
+        params = mock_create_volume_params(TEST_SIZE, TEST_VOLUME_NAME,
+                                           TEST_DESCRIPTION, TEST_SNAPSHOT)
+        conn_mock.get_object('CreateVolume', params,
+                             boto.ec2.volume.Volume).AndReturn(TEST_RETURN)
+
+        params = mock_create_volume_params(TEST_SIZE, None, None, None)
+        conn_mock.get_object('CreateVolume', params,
+                             boto.ec2.volume.Volume).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.create_volume(TEST_SIZE, TEST_VOLUME_NAME,
+                                            TEST_DESCRIPTION, TEST_SNAPSHOT)
+        self.assertEqual(retval, TEST_RETURN)
+
+        retval = self.manager.create_volume(TEST_SIZE)
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_delete_volume(self):
-        pass
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.delete_volume(TEST_VOLUME_ID).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.delete_volume(TEST_VOLUME_ID)
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_attach_volume(self):
-        pass
+        TEST_DEVICE = 'testDevice'
+
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.attach_volume(TEST_VOLUME_ID, TEST_INSTANCE_ID,
+                                TEST_DEVICE).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.attach_volume(TEST_VOLUME_ID, TEST_INSTANCE_ID,
+                                            TEST_DEVICE)
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
 
     def test_detach_volume(self):
-        pass
+        conn_mock = self.stub_conn_mock()
+
+        conn_mock.detach_volume(TEST_VOLUME_ID).AndReturn(TEST_RETURN)
+
+        self.mox.ReplayAll()
+
+        retval = self.manager.detach_volume(TEST_VOLUME_ID)
+        self.assertEqual(retval, TEST_RETURN)
+
+        self.mox.VerifyAll()
