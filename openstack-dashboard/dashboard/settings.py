@@ -13,6 +13,7 @@ TEMPLATE_DEBUG = DEBUG
 SITE_ID = 1
 SITE_BRANDING = 'OpenStack'
 SITE_NAME = 'openstack'
+ENABLE_VNC = True
 
 #LOGIN_URL = '/accounts/login'
 #LOGIN_REDIRECT_URL = '/'
@@ -20,7 +21,7 @@ LOGIN_URL = '/dashboard/accounts/login'
 LOGIN_REDIRECT_URL = '/dashboard/'
 
 
-MEDIA_ROOT =  os.path.join(ROOT_PATH, '..', 'media')
+MEDIA_ROOT = os.path.join(ROOT_PATH, '..', 'media')
 MEDIA_URL = '/media/'
 ADMIN_MEDIA_PREFIX = '/media/admin/'
 
@@ -35,6 +36,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.doc.XViewMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
+    'dashboard.middleware.DashboardLogUnhandledExceptionsMiddleware',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -67,7 +70,10 @@ INSTALLED_APPS = (
     'django.contrib.markup',
     'django.contrib.syndication',
     'django_nose',
-    'django_nova',
+    'django_openstack',
+    'django_openstack.nova',
+    'django_openstack.templatetags',
+    'django_nova_syspanel',
     'registration',
 )
 
@@ -77,9 +83,20 @@ AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend',)
 MESSAGE_STORAGE = 'django.contrib.messages.storage.cookie.CookieStorage'
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-TIME_ZONE = 'PST+08PDT,M3.2.0,M11.1.0'
-LANGUAGE_CODE = 'en-us'
-USE_I18N = False
+TIME_ZONE = None
+gettext_noop = lambda s: s
+LANGUAGES = (
+    ('en', gettext_noop('English')),
+    ('en-gb', gettext_noop('British English')),
+    ('es', gettext_noop('Spanish')),
+    ('fr', gettext_noop('French')),
+    ('ja', gettext_noop('Japanese')),
+    ('pt', gettext_noop('Portuguese')),
+    ('zh-cn', gettext_noop('Simplified Chinese')),
+    ('zh-tw', gettext_noop('Traditional Chinese')),
+)
+LANGUAGE_CODE = 'en'
+USE_I18N = True
 
 ACCOUNT_ACTIVATION_DAYS = 7
 
