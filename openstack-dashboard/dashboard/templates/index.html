@@ -13,7 +13,7 @@
     <p>Through the {% site_branding %} Dashboard you can manage your cloud
       through a crisp, clean, and easy to use interface.
       {% if not request.user.is_authenticated%}To get started
-      <a href="{% url registration_register %}">register</a> or sign in below.{% endif %}
+      <a href="{% url registration_register %}">register</a> or sign in below.{% endif %} 
     </p>
   </div>
 
@@ -52,7 +52,7 @@
           {% endif %}
           <label for="username">Username:</label><input id="username" type="text" name="username" />
           <label for="password">Password:</label><input id="password" type="password" name="password" />
-          <input type="hidden" name="next" value="/" />
+          <input type="hidden" name="next" value="/dashboard" />
           <div class="button">
             <input id="home_login_btn" type="submit" value="Sign In">
             <span id="forgot_password"><a id="forgot_password_link" href="{% url auth_password_reset %}">Forgot Password?</a></span>

@@ -32,7 +32,7 @@
 
   $(function() {
     setInterval(function() {
-      $('#spinner').show();
+     $('#spinner').show();
       {% if detail %}
         $('#instances').load('{% url nova_instances_refresh_detail project.projectname selected_instance.id %}', onInstancesUpdated);
       {% else %}

@@ -21,7 +21,10 @@
         <div class="even">
           <h4 class="label">Location</h4>
           <span class="image_location">{{ ami.location }}</span>
+	  <h4 class="label">Architecture</h4>
+	  <span class="image_architecture">{{ ami.architecture }}</span>
         </div>
+<!--KDS list in launch window is generated here-->
         {% include "django_nova/images/_launch_form.html" %}
         <input id="launch_image" type="submit" value="Launch" />
       </fieldset>

@@ -14,8 +14,11 @@ SITE_ID = 1
 SITE_BRANDING = 'OpenStack'
 SITE_NAME = 'openstack'
 
-LOGIN_URL = '/accounts/login'
-LOGIN_REDIRECT_URL = '/'
+#LOGIN_URL = '/accounts/login'
+#LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/dashboard/accounts/login'
+LOGIN_REDIRECT_URL = '/dashboard/'
+
 
 MEDIA_ROOT =  os.path.join(ROOT_PATH, '..', 'media')
 MEDIA_URL = '/media/'

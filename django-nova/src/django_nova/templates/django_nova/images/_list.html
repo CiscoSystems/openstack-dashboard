@@ -4,6 +4,8 @@
       <tr>
         <th>ID</th>
         <th>Description</th>
+<!--KDS-->
+	<th>Architecture</th>
         <th colspan="2">Owner</th>
       </tr>
       {% for image in images %}
@@ -87,13 +89,17 @@
             <td class="image_id">
               <a href="{% url nova_images_detail project.projectname image.id %}">{% if image.displayName %}{{ image.displayName }}{%else%}{{ image.id }}{% endif %}</a>
             </td>
-            <td class="image_location odd">
+            <td class="image_location">
               {% if image.description %}
                 {{ image.description }}
               {% else %}
                 {{ image.location }}
               {% endif %}
             </td>
+<!--KDS obtain value for architecture field-->
+            <td class="data odd">
+             {{ image.architecture }}
+	    </td>
             <td class="image_owner_id">{{ image.ownerId }}</td>
             <td class="image_launch_btn odd"><a id="launch_{{ image.id }}" class="launch" href="{% url nova_images_launch project.projectname image.id %}">Launch</a></td>
             {#<td class="odd"><a class="ui-state-default ui-corner-all" onclick="$('#dlg_launch').dialog('open');">Launch</a></td>#}

@@ -5,12 +5,15 @@
           <th>Image</th>
           <th>Size</th>
           <th>IP</th>
+<!--KDS-->
+	<th>Architecture</th>
           <th colspan="2">State</th>
         </tr>
         {% for instance in instances %}
         <tr class="{% cycle 'odd' 'even' %}">
           {% if instance.id == selected_instance.id %}
-            <td class="detail_wrapper" colspan="6">
+<!--KDS changed from 6 to 7 for number of columns to match table width when a row is selected and details appear-->
+            <td class="detail_wrapper" colspan="7">
               <div id="{{selected_instance.id}}" class="instance_detail">
                 <div class="column">
                   <div class="instance_detail_item">
@@ -20,6 +23,11 @@
                   <div class="instance_detail_item">
                     <span class="label">Name: </span>
                     <span class="data">{% if selected_instance.displayName != "" %}{{ selected_instance.displayName }}{% else %} None {% endif %}</span>
+                  </div>
+<!--PAE/KDS this is when a row is selected and details appear. added arch field in there -->
+                  <div class="instance_detail_item">
+                    <span class="label">Architecture: </span>
+                    <span class="data">{{ selected_instance.architecture }}</span>
                   </div>
                   <div class="instance_detail_item">
                     <span class="label">Description: </span>
@@ -56,7 +64,8 @@
                   <a href="{% url nova_instances_console project.projectname instance.id %}" id="console_{{instance.id}}" class="console" target="_blank">Show Console</a>{% endif %}
                    <a id="edit_instance_link" href="{% url nova_instance_update project.projectname instance.id %}">Edit Instance</a>
 
-
+<!--KDS added close option to the detail window-->
+              <a id="close_detail" href="{% url nova_instances project.projectname %}">[x] close</a>
                  </div>
 
                  <span class="delete">
@@ -66,17 +75,17 @@
                       {% csrf_token %}
                     </form>
                   </span>
-
               </div>
-
             </td>
           {% else %}
 
-            <td><a href="{% url nova_instances_detail project.projectname instance.id %}">{{ instance.id }} {% if instance.displayName %}({{ instance.displayName }}){% endif %}
+            <td class="odd"><a href="{% url nova_instances_detail project.projectname instance.id %}">{{ instance.id }} {% if instance.displayName %}({{ instance.displayName }}){% endif %}
               </a></td>
-            <td class="odd">{{ instance.image_id }}</td>
-            <td>{{ instance.instance_type }}</td>
-            <td class="odd">{{ instance.dns_name }}</td>
+            <td>{{ instance.image_id }}</td>
+            <td class="odd">{{ instance.instance_type }}</td>
+            <td>{{ instance.dns_name }}</td>
+<!--PAE/KDS temp value for architecture field-->
+	    <td class="data odd">{{ instance.architecture }}</td>
             <td>{{ instance.state }}</td>
             <td id="actions" class="odd">
               <form id="form_terminate_{{ instance.id }}" class="form-terminate" method="post" action="{% url nova_instances_terminate project.projectname %}" >
