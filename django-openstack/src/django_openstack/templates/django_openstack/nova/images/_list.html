@@ -5,11 +5,13 @@
       <tr>
         <th>ID</th>
         <th>Description</th>
+        <th>Architecture</th>
         <th colspan="2">Owner</th>
       </tr>
       {% for image in images %}
         {% if image.id == ami.id %}
-          <td class="detail_wrapper" colspan="4">
+<!-- changed from 4 to 5 to add width to detail window-->
+          <td class="detail_wrapper" colspan="5">
             <div id="{{ ami.id }}" class="image_detail">
               <div class="column">
                 <div class="image_detail_item">
@@ -94,6 +96,10 @@
               {% else %}
                 {{ image.location }}
               {% endif %}
+            </td>
+<!--obtain value for architecture field-->
+            <td class="data odd">
+             {{ image.architecture }}
             </td>
             <td class="image_owner_id">{{ image.ownerId }}</td>
             <td class="image_launch_btn odd"><a id="launch_{{ image.id }}" class="launch" href="{% url nova_images_launch project.projectname image.id %}">Launch</a></td>
