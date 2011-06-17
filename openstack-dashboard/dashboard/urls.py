@@ -46,14 +46,26 @@ urlpatterns = patterns('',
     url(r'^syspanel/', include('django_nova_syspanel.urls')),
 )
 
-urlpatterns += patterns('',
+#KDS: urlpatterns += patterns('',
     # TODO(devcamcar): Move permission denied template into django-openstack.
+#KDS:     url(r'^denied/$',
+#KDS:         generic_views.TemplateView.as_view(template_name='permission_denied.html'),
+#KDS:         {'name': 'dashboard_permission_denied'}),
+#KDS:     url(r'^unavailable/$',
+#KDS:         generic_views.TemplateView.as_view(template_name='unavailable.html'),
+#KDS:         {'name': 'nova_unavailable'}),
+#KDS: )
+# KDS: added from the old version of code
+urlpatterns += patterns('django.views.generic.simple',
+    # TODO(devcamcar): Move permission denied template into django-nova.
     url(r'^denied/$',
-        generic_views.TemplateView.as_view(template_name='permission_denied.html'),
-        {'name': 'dashboard_permission_denied'}),
+        'direct_to_template',
+        {'template': 'permission_denied.html'},
+        name='dashboard_permission_denied'),
     url(r'^unavailable/$',
-        generic_views.TemplateView.as_view(template_name='unavailable.html'),
-        {'name': 'nova_unavailable'}),
+        'direct_to_template',
+        {'template': 'unavailable.html'},
+        name='nova_unavailable'),
 )
 
 urlpatterns += patterns('',
