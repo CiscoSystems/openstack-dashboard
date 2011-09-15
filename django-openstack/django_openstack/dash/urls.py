@@ -28,6 +28,7 @@ CONTAINERS = r'^(?P<tenant_id>[^/]+)/containers/%s$'
 OBJECTS = r'^(?P<tenant_id>[^/]+)/containers/(?P<container_name>[^/]+)/%s$'
 NETWORKS = r'^(?P<tenant_id>[^/]+)/networks/%s$'
 PORTS = r'^(?P<tenant_id>[^/]+)/networks/(?P<network_id>[^/]+)/ports/%s$'
+MULTIPORTS = r'^(?P<tenant_id>[^/]+)/multiport/%s$'
 
 urlpatterns = patterns('django_openstack.dash.views.instances',
     url(r'^(?P<tenant_id>[^/]+)/$', 'usage', name='dash_usage'),
@@ -73,6 +74,7 @@ urlpatterns += patterns('django_openstack.dash.views.networks',
     url(NETWORKS % 'create', 'create', name='dash_network_create'),
     url(NETWORKS % '(?P<network_id>[^/]+)/detail', 'detail', name='dash_networks_detail'),
     url(NETWORKS % '(?P<network_id>[^/]+)/rename', 'rename', name='dash_network_rename'),
+    url(r'^(?P<tenant_id>[^/]+)/multiports/$', 'multiports', name='dash_multiports_create'),
 )
 
 urlpatterns += patterns('django_openstack.dash.views.ports',

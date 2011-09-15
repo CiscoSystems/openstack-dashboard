@@ -16,6 +16,9 @@
   {% if networks %}
     {% include '_network_list.html' %}
     <a id="network_create_link" class="action_link large-rounded" href="{% url dash_network_create request.user.tenant %}">Create New Network</a>
+    {% if multiport == True %}
+	<a id="create_multiport_link" class="action_link large-rounded" href="{% url dash_multiports_create request.user.tenant %}">Create Multiports</a>
+    {% endif %}
   {% else %}
     <div class="message_box info">
       <h2>Info</h2>

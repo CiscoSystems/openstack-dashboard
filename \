@@ -116,17 +116,13 @@ class CreateMultiports(forms.SelfHandlingForm):
 
     def handle(self, request, data):
         try:
+            networks = []
+            for network in data['networks']:
+                networks.append(str(network))
             LOG.info("Creating ports on networks %s " % data['networks'])
-            network_string = str(data['networks'])
-            network_string = network_string.replace("u'", '')
-            network_string = network_string.replace("'", '')
-            network_string = network_string.replace('[', '')
-            network_string = network_string.replace(']', '')
-            network_string = network_string.replace(' ', '')
-            network_list = network_string.split(',')
             ports_info = {'multiport': \
                   {'status': 'ACTIVE',
-                   'net_id_list': network_list,
+                   'net_id_list': str(data['networks']),
                    'ports_desc': {'key': 'value'}}}
             api.quantum_create_multiport(request, body=ports_info)
         except Exception, e:
@@ -258,6 +254,7 @@ def _get_port_states(request, tenant_id, network_id):
     network_ports = []
     # Get all vifs for comparison with port attachments
     vifs = api.get_vif_ids(request)
+
     # Get all ports on this network
     ports = api.quantum_list_ports(request, network_id)
     for port in ports['ports']:

@@ -314,9 +314,9 @@ def account_api(request):
 
 def glance_api(request):
     o = urlparse(url_for(request, 'glance'))
-    LOG.debug('glance_api connection created for host "%s:%d"' %
-                     (o.hostname, o.port))
-    return glance.client.Client(o.hostname, o.port)
+    LOG.debug('glance_api connection created for host "%s:%s"' %
+                     ('10.10.2.16', '9292'))
+    return glance.client.Client('10.10.2.16', '9292')
 
 
 def admin_api(request):
@@ -713,8 +713,43 @@ def quantum_port_attachment(request, network_id, port_id):
     return quantum_api(request).show_port_attachment(network_id, port_id)
 
 
+def quantum_list_extensions(request):
+    return quantum_api(request).list_extensions()
+
+
+def quantum_create_multiport(request, body):
+    obj = quantum_api(request)
+    return obj.create_multiport(body)
+
 def get_vif_ids(request):
-    vifs = []
+    vifs = [
+        {
+            'id' : 'VIF1',
+            'instance_name' : 'Instance 001',
+	    'available' : True,
+	    'instance' : '001'
+        },
+        {
+            'id' : 'VIF2',
+            'instance_name' : 'Instance 001',
+	    'available' : True,
+            'instance' : '001'
+        },
+        {
+            'id' : 'VIF3',
+            'instance_name' : 'Instance 002',
+	    'available' : True,
+            'instance' : '002'
+        },
+        {
+            'id' : 'VIF4',
+            'instance_name' : 'Instance 002',
+	    'available' : True,
+            'instance' : '002'
+        }
+    ]
+    return vifs
+    #vifs = []
     attached_vifs = []
     # Get a list of all networks
     networks_list = quantum_api(request).list_networks()
