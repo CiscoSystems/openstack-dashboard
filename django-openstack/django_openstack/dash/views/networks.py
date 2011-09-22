@@ -38,6 +38,7 @@ from django_openstack import api
 from django_openstack.dash.views.ports import DeletePort
 from django_openstack.dash.views.ports import DetachPort
 from django_openstack.dash.views.ports import TogglePort
+from django_openstack.dash.views.ports import AttachMultiPort
 
 import warnings
 
@@ -112,21 +113,18 @@ class RenameNetwork(forms.SelfHandlingForm):
 
 class CreateMultiports(forms.SelfHandlingForm):
     networks = forms.CharField(widget=forms.SelectMultiple(),
-                             label="Select Networks")
+                             label="Select Networks", required=False)
 
     def handle(self, request, data):
         try:
-            LOG.info("Creating ports on networks %s " % data['networks'])
-            network_string = str(data['networks'])
-            network_string = network_string.replace("u'", '')
-            network_string = network_string.replace("'", '')
-            network_string = network_string.replace('[', '')
-            network_string = network_string.replace(']', '')
-            network_string = network_string.replace(' ', '')
-            network_list = network_string.split(',')
+	    net_id_list = []
+	    networks_list = api.quantum_list_networks(request)
+	    for network in networks_list['networks']:
+		net_id_list.append(network['id'])
+            LOG.info("Creating ports on networks %s " % net_id_list)
             ports_info = {'multiport': \
                   {'status': 'ACTIVE',
-                   'net_id_list': network_list,
+                   'net_id_list': net_id_list,
                    'ports_desc': {'key': 'value'}}}
             api.quantum_create_multiport(request, body=ports_info)
         except Exception, e:
@@ -146,16 +144,10 @@ def index(request, tenant_id):
 
     networks = []
     instances = []
-    multiport = False
 
     try:
-        # Get extensions
-        extensions = api.quantum_list_extensions(request)
-        for extension in extensions['extensions']:
-            if str(extension['name']) == 'Cisco Multiport':
-                multiport = True
-                break
-        networks_list = api.quantum_list_networks(request)
+        multiport = api.quantum_check_multiport(request)
+	networks_list = api.quantum_list_networks(request)
         details = []
         for network in networks_list['networks']:
             net_stats = _calc_network_stats(request, tenant_id, network['id'])
@@ -196,6 +188,7 @@ def detail(request, tenant_id, network_id):
     delete_port_form, delete_handled = DeletePort.maybe_handle(request)
     detach_port_form, detach_handled = DetachPort.maybe_handle(request)
     toggle_port_form, port_toggle_handled = TogglePort.maybe_handle(request)
+    multiport_attach_form, multiport_handled = AttachMultiPort.maybe_handle(request)
 
     network = {}
 
@@ -212,7 +205,9 @@ def detail(request, tenant_id, network_id):
         'tenant': tenant_id,
         'delete_port_form': delete_port_form,
         'detach_port_form': detach_port_form,
-        'toggle_port_form': toggle_port_form
+        'toggle_port_form': toggle_port_form,
+	'multiport': api.quantum_check_multiport(request),
+	'attach_multiport': multiport_attach_form,
     }, context_instance=template.RequestContext(request))
 
 

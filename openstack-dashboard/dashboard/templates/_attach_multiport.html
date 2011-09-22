@@ -1,0 +1,13 @@
+<form id="attach_multiport_form_{{port.id}}" class="form-attach" method="post">
+  {% csrf_token %}
+  {% for hidden in form.hidden_fields %}{{hidden}}{% endfor %}
+  {% for field in form.visible_fields %}
+    {{ field.label_tag }}
+    {{ field.errors }}
+    {{ field }}
+  {% endfor %}
+  <input name="network" type="hidden" value="{{network.id}}" />
+  <input name="port" type="hidden" value="{{port.id}}" />
+  <input name="vif_id" type="hidden" value="{{port.attachment}}" />
+  <input type="submit" value="Attach" class="large-rounded" />
+</form>

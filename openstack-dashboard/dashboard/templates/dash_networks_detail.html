@@ -20,14 +20,14 @@
 {% block dash_main %}
   {% if network.ports %}
     {% include '_network_detail.html' %}
-    {% if multiport == True %}
+    {% if multiport %}
     <a id="create_multiport_link" class="action_link large-rounded" href="{% url dash_multiports_create request.user.tenant %}">Create Multiports</a>
     {% else %}
     <a id="network_create_link" class="action_link large-rounded" href="{% url dash_ports_create request.user.tenant network.id %}">Create Ports</a>
     {% endif %}
   {% else %}
     <div class="message_box info">
-     {% if multiport == True %}
+     {% if multiport %}
      <h2>Info</h2>
      <p>This is a Cisco multi-blade/chassis network. Create ports using the multiport page: <a href="{% url dash_multiports_create request.user.tenant %}">Create Ports &gt;&gt;</a></p>
      {% else %}

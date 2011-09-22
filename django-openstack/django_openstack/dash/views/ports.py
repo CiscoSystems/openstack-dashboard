@@ -107,6 +107,30 @@ class AttachPort(forms.SelfHandlingForm):
         return shortcuts.redirect(request.build_absolute_uri())
 
 
+class AttachMultiPort(forms.SelfHandlingForm):
+    network = forms.CharField(widget=forms.HiddenInput())
+    port = forms.CharField(widget=forms.HiddenInput())
+    vif_id = forms.CharField(widget=forms.HiddenInput())
+
+    def handle(self, request, data):
+        try:
+            LOG.info('Attaching %s port to VIF %s' %
+                     (data['port'], data['vif_id']))
+            body = {'attachment': {'id': '%s' % data['vif_id']}}
+            api.quantum_attach_port(request,
+                                        data['network'], data['port'], body)
+        except Exception, e:
+            messages.error(request,
+                           'Unable to attach port %s to VIF %s: %s' %
+                           (data['port'], data['vif_id'], e.message,))
+        else:
+            msg = 'Port %s connected to VIF %s.' % \
+                  (data['port'], data['vif_id'])
+            LOG.info(msg)
+            messages.success(request, msg)
+        return shortcuts.redirect(request.build_absolute_uri())
+	
+
 class DetachPort(forms.SelfHandlingForm):
     network = forms.CharField(widget=forms.HiddenInput())
     port = forms.CharField(widget=forms.HiddenInput())

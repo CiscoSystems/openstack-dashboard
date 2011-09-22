@@ -721,7 +721,18 @@ def quantum_create_multiport(request, body):
     obj = quantum_api(request)
     return obj.create_multiport(body)
 
+
+def quantum_check_multiport(request):
+    multiport = False
+    extensions = quantum_list_extensions(request)
+    for extension in extensions['extensions']:
+        if str(extension['name']) == 'Cisco Multiport':
+            multiport = True
+    return multiport
+
+
 def get_vif_ids(request):
+    """
     vifs = [
         {
             'id' : 'VIF1',
@@ -749,7 +760,8 @@ def get_vif_ids(request):
         }
     ]
     return vifs
-    #vifs = []
+    """
+    vifs = []
     attached_vifs = []
     # Get a list of all networks
     networks_list = quantum_api(request).list_networks()
