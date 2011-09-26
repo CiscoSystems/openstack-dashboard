@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -47,6 +47,7 @@ import openstackx.admin
 import openstackx.api.exceptions as api_exceptions
 import openstackx.extras
 import openstackx.auth
+from novaclient.v1_1 import client
 import quantum.client
 from urlparse import urlparse
 
@@ -131,6 +132,11 @@ class Flavor(APIResourceWrapper):
     _attrs = ['disk', 'id', 'links', 'name', 'ram', 'vcpus']
 
 
+class FloatingIp(APIResourceWrapper):
+    """Simple wrapper for floating ips"""
+    _attrs = ['ip', 'fixed_ip', 'instance_id', 'id']
+
+
 class Image(APIDictWrapper):
     """Simple wrapper around glance image dictionary"""
     _attrs = ['checksum', 'container_format', 'created_at', 'deleted',
@@ -152,7 +158,7 @@ class ImageProperties(APIDictWrapper):
 
 class KeyPair(APIResourceWrapper):
     """Simple wrapper around openstackx.extras.keypairs.Keypair"""
-    _attrs = ['fingerprint', 'key_name', 'private_key']
+    _attrs = ['fingerprint', 'name', 'private_key']
 
 
 class Server(APIResourceWrapper):
@@ -194,7 +200,8 @@ class ServerAttributes(APIDictWrapper):
     _attrs = ['description', 'disk_gb', 'host', 'image_ref', 'kernel_id',
               'key_name', 'launched_at', 'mac_address', 'memory_mb', 'name',
               'os_type', 'tenant_id', 'ramdisk_id', 'scheduled_at',
-              'terminated_at', 'user_data', 'user_id', 'vcpus', 'hostname']
+              'terminated_at', 'user_data', 'user_id', 'vcpus', 'hostname',
+              'security_groups']
 
 
 class Services(APIResourceWrapper):
@@ -227,6 +234,22 @@ class Usage(APIResourceWrapper):
 class User(APIResourceWrapper):
     """Simple wrapper around openstackx.extras.users.User"""
     _attrs = ['email', 'enabled', 'id', 'tenantId']
+
+
+class SecurityGroup(APIResourceWrapper):
+    """Simple wrapper around openstackx.extras.security_groups.SecurityGroup"""
+    _attrs = ['id', 'name', 'description', 'tenant_id', 'rules']
+
+
+class SecurityGroupRule(APIResourceWrapper):
+    """Simple wrapper around openstackx.extras.security_groups.SecurityGroupRule"""
+    _attrs = ['id', 'parent_group_id', 'group_id', 'ip_protocol',
+              'from_port', 'to_port', 'groups', 'ip_ranges']
+
+
+class SecurityGroupRule(APIResourceWrapper):
+    """Simple wrapper around openstackx.extras.users.User"""
+    _attrs = ['id', 'name', 'description', 'tenant_id', 'security_group_rules']
 
 
 class SwiftAuthentication(object):
@@ -280,8 +303,10 @@ def check_openstackx(f):
             return f(*args, **kwargs)
         except api_exceptions.NotFound, e:
             e.message = e.details or ''
-            e.message += ' This error may be caused by missing openstackx' \
-                         ' extensions in nova. See the dashboard README.'
+            e.message += ' This error may be caused by a misconfigured' \
+                         ' nova url in keystone\'s service catalog, or ' \
+                         ' by missing openstackx extensions in nova. ' \
+                         ' See the dashboard README.'
             raise
 
     return inner
@@ -314,9 +339,9 @@ def account_api(request):
 
 def glance_api(request):
     o = urlparse(url_for(request, 'glance'))
-    LOG.debug('glance_api connection created for host "%s:%s"' %
-                     ('10.10.2.16', '9292'))
-    return glance.client.Client('10.10.2.16', '9292')
+    LOG.debug('glance_api connection created for host "%s:%d"' %
+                     (o.hostname, o.port))
+    return glance.client.Client(o.hostname, o.port, auth_tok=request.user.token)
 
 
 def admin_api(request):
@@ -333,6 +358,18 @@ def extras_api(request):
                     (request.user.token, url_for(request, 'nova')))
     return openstackx.extras.Extras(auth_token=request.user.token,
                                    management_url=url_for(request, 'nova'))
+
+
+def novaclient(request):
+    LOG.debug('novaclient connection created using token "%s"'
+              ' and url "%s"' % (request.user.token, url_for(request, 'nova')))
+    c = client.Client(username=request.user.username,
+                      api_key=request.user.token,
+                      project_id=request.user.tenant,
+                      auth_url=url_for(request, 'nova'))
+    c.client.auth_token = request.user.token
+    c.client.management_url=url_for(request, 'nova')
+    return c
 
 
 def auth_api():
@@ -357,7 +394,7 @@ def quantum_api(request):
         tenant = request.user.tenant
     else:
         tenant = settings.QUANTUM_TENANT
-
+    
     return quantum.client.Client(settings.QUANTUM_URL, settings.QUANTUM_PORT,
                   False, tenant, 'json')
 
@@ -367,21 +404,50 @@ def console_create(request, instance_id, kind='text'):
 
 
 def flavor_create(request, name, memory, vcpu, disk, flavor_id):
+    # TODO -- convert to novaclient when novaclient adds create support
     return Flavor(admin_api(request).flavors.create(
             name, int(memory), int(vcpu), int(disk), flavor_id))
 
 
 def flavor_delete(request, flavor_id, purge=False):
+    # TODO -- convert to novaclient when novaclient adds delete support
     admin_api(request).flavors.delete(flavor_id, purge)
 
 
 def flavor_get(request, flavor_id):
-    return Flavor(compute_api(request).flavors.get(flavor_id))
+    return Flavor(novaclient(request).flavors.get(flavor_id))
 
 
-@check_openstackx
 def flavor_list(request):
-    return [Flavor(f) for f in extras_api(request).flavors.list()]
+    return [Flavor(f) for f in novaclient(request).flavors.list()]
+
+
+def tenant_floating_ip_list(request):
+    """
+    Fetches a list of all floating ips.
+    """
+    return [FloatingIp(ip) for ip in novaclient(request).floating_ips.list()]
+
+
+def tenant_floating_ip_get(request, floating_ip_id):
+    """
+    Fetches a floating ip.
+    """
+    return novaclient(request).floating_ips.get(floating_ip_id)
+
+
+def tenant_floating_ip_allocate(request):
+    """
+    Allocates a floating ip to tenant.
+    """
+    return novaclient(request).floating_ips.create()
+
+
+def tenant_floating_ip_release(request, floating_ip_id):
+    """
+    Releases floating ip from the pool of a tenant.
+    """
+    return novaclient(request).floating_ips.delete(floating_ip_id)
 
 
 def image_create(request, image_meta, image_file):
@@ -409,7 +475,7 @@ def snapshot_list_detailed(request):
 
 
 def snapshot_create(request, instance_id, name):
-    return extras_api(request).snapshots.create(instance_id, name)
+    return novaclient(request).servers.create_image(instance_id, name)
 
 
 def image_update(request, image_id, image_meta=None):
@@ -419,22 +485,23 @@ def image_update(request, image_id, image_meta=None):
 
 
 def keypair_create(request, name):
-    return KeyPair(extras_api(request).keypairs.create(name))
+    return KeyPair(novaclient(request).keypairs.create(name))
 
 
 def keypair_delete(request, keypair_id):
-    extras_api(request).keypairs.delete(keypair_id)
+    novaclient(request).keypairs.delete(keypair_id)
 
 
-@check_openstackx
 def keypair_list(request):
-    return [KeyPair(key) for key in extras_api(request).keypairs.list()]
+    return [KeyPair(key) for key in novaclient(request).keypairs.list()]
 
 
-def server_create(request, name, image, flavor, key_name, user_data):
-    return Server(extras_api(request).servers.create(
-            name, image, flavor, key_name=key_name, user_data=user_data),
-            request)
+def server_create(request, name, image, flavor,
+                           key_name, user_data, security_groups):
+    return Server(novaclient(request).servers.create(
+            name, image, flavor, userdata=user_data,
+            security_groups=security_groups,
+            key_name=key_name), request)
 
 
 def server_delete(request, instance):
@@ -466,6 +533,26 @@ def server_update(request, instance_id, name, description):
     return extras_api(request).servers.update(instance_id,
                                               name=name,
                                               description=description)
+
+
+def server_add_floating_ip(request, server, address):
+    """
+    Associates floating IP to server's fixed IP.
+    """
+    server = novaclient(request).servers.get(server)
+    fip = novaclient(request).floating_ips.get(address)
+
+    return novaclient(request).servers.add_floating_ip(server, fip)
+
+
+def server_remove_floating_ip(request, server, address):
+    """
+    Removes relationship between floating and server's fixed ip.
+    """
+    fip = novaclient(request).floating_ips.get(address)
+    server = novaclient(request).servers.get(fip.instance_id)
+
+    return novaclient(request).servers.remove_floating_ip(server, fip)
 
 
 def service_get(request, name):
@@ -569,6 +656,39 @@ def user_delete(request, user_id):
 
 def user_get(request, user_id):
     return User(account_api(request).users.get(user_id))
+
+
+def security_group_list(request):
+    return [SecurityGroup(g) for g in novaclient(request).\
+                                     security_groups.list()]
+
+def security_group_get(request, security_group_id):
+    return SecurityGroup(novaclient(request).\
+                         security_groups.get(security_group_id))
+
+def security_group_create(request, name, description):
+    return SecurityGroup(novaclient(request).\
+                         security_groups.create(name, description))
+
+
+def security_group_delete(request, security_group_id):
+    novaclient(request).security_groups.delete(security_group_id)
+
+
+def security_group_rule_create(request, parent_group_id, ip_protocol=None,
+                               from_port=None, to_port=None, cidr=None,
+                               group_id=None):
+    return SecurityGroup(novaclient(request).\
+                         security_group_rules.create(parent_group_id,
+                                                     ip_protocol,
+                                                     from_port,
+                                                     to_port,
+                                                     cidr,
+                                                     group_id))
+
+
+def security_group_rule_delete(request, security_group_rule_id):
+    novaclient(request).security_group_rules.delete(security_group_rule_id)
 
 
 @check_openstackx
@@ -827,28 +947,38 @@ class GlobalSummary(object):
 
         for service in self.service_list:
             if service.type == 'nova-compute':
-                self.summary['total_vcpus'] += min(service.stats['max_vcpus'], service.stats.get('vcpus', 0))
-                self.summary['total_disk_size'] += min(service.stats['max_gigabytes'], service.stats.get('local_gb', 0))
-                self.summary['total_ram_size'] += min(service.stats['max_ram'], service.stats['memory_mb']) if 'max_ram' in service.stats else service.stats.get('memory_mb', 0)
+                self.summary['total_vcpus'] += min(service.stats['max_vcpus'],
+                        service.stats.get('vcpus', 0))
+                self.summary['total_disk_size'] += min(
+                        service.stats['max_gigabytes'],
+                        service.stats.get('local_gb', 0))
+                self.summary['total_ram_size'] += min(
+                        service.stats['max_ram'],
+                        service.stats['memory_mb']) if 'max_ram' \
+                                in service.stats \
+                                else service.stats.get('memory_mb', 0)
 
     def usage(self, datetime_start, datetime_end):
         try:
-            self.usage_list = usage_list(self.request, datetime_start, datetime_end)
+            self.usage_list = usage_list(self.request, datetime_start,
+                    datetime_end)
         except api_exceptions.ApiException, e:
             self.usage_list = []
             LOG.error('ApiException fetching usage list in instance usage'
                       ' on date range "%s to %s"' % (datetime_start,
                                                      datetime_end),
                       exc_info=True)
-            messages.error(self.request, 'Unable to get usage info: %s' % e.message)
+            messages.error(self.request,
+                    'Unable to get usage info: %s' % e.message)
             return
 
         for usage in self.usage_list:
-            # FIXME: api needs a simpler dict interface (with iteration) - anthony
-            # NOTE(mgius): Changed this on the api end.  Not too much neater, but
-            # at least its not going into private member data of an external
-            # class anymore
-            #usage = usage._info
+            # FIXME: api needs a simpler dict interface (with iteration)
+            # - anthony
+            # NOTE(mgius): Changed this on the api end.  Not too much
+            # neater, but at least its not going into private member
+            # data of an external class anymore
+            # usage = usage._info
             for k in usage._attrs:
                 v = usage.__getattr__(k)
                 if type(v) in [float, int]:
@@ -865,8 +995,11 @@ class GlobalSummary(object):
             mult = 1.0
 
         for kind in GlobalSummary.node_resource_info:
-            self.summary['total_' + kind + rsrc + '_hr'] = self.summary['total_' + kind + rsrc] / mult
+            self.summary['total_' + kind + rsrc + '_hr'] = \
+                    self.summary['total_' + kind + rsrc] / mult
 
     def avail(self):
         for rsrc in GlobalSummary.node_resources:
-            self.summary['total_avail_' + rsrc] = self.summary['total_' + rsrc] - self.summary['total_active_' + rsrc]
+            self.summary['total_avail_' + rsrc] = \
+                    self.summary['total_' + rsrc] - \
+                    self.summary['total_active_' + rsrc]

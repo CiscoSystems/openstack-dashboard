@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -48,8 +48,10 @@ class AddUser(forms.SelfHandlingForm):
 
     def handle(self, request, data):
         try:
-            api.account_api(request).role_refs.add_for_tenant_user(data['tenant'],
-                    data['user'], settings.OPENSTACK_KEYSTONE_DEFAULT_ROLE)
+            api.account_api(request).role_refs.add_for_tenant_user(
+                    data['tenant'],
+                    data['user'],
+                    settings.OPENSTACK_KEYSTONE_DEFAULT_ROLE)
             messages.success(request,
                              '%s was successfully added to %s.'
                              % (data['user'], data['tenant']))
@@ -65,8 +67,10 @@ class RemoveUser(forms.SelfHandlingForm):
 
     def handle(self, request, data):
         try:
-            api.account_api(request).role_refs.delete_for_tenant_user(data['tenant'],
-                    data['user'], 'Member')
+            api.account_api(request).role_refs.delete_for_tenant_user(
+                    data['tenant'],
+                    data['user'],
+                    'Member')
             messages.success(request,
                              '%s was successfully removed from %s.'
                              % (data['user'], data['tenant']))
@@ -78,8 +82,10 @@ class RemoveUser(forms.SelfHandlingForm):
 
 class CreateTenant(forms.SelfHandlingForm):
     id = forms.CharField(label="ID (name)")
-    description = forms.CharField(widget=forms.widgets.Textarea(), label="Description")
-    enabled = forms.BooleanField(label="Enabled", required=False, initial=True)
+    description = forms.CharField(widget=forms.widgets.Textarea(),
+            label="Description")
+    enabled = forms.BooleanField(label="Enabled", required=False,
+            initial=True)
 
     def handle(self, request, data):
         try:
@@ -102,8 +108,10 @@ class CreateTenant(forms.SelfHandlingForm):
 
 
 class UpdateTenant(forms.SelfHandlingForm):
-    id = forms.CharField(label="ID (name)", widget=forms.TextInput(attrs={'readonly':'readonly'}))
-    description = forms.CharField(widget=forms.widgets.Textarea(), label="Description")
+    id = forms.CharField(label="ID (name)",
+            widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+    description = forms.CharField(widget=forms.widgets.Textarea(),
+            label="Description")
     enabled = forms.BooleanField(label="Enabled", required=False)
 
     def handle(self, request, data):
@@ -126,10 +134,12 @@ class UpdateTenant(forms.SelfHandlingForm):
 
 
 class UpdateQuotas(forms.SelfHandlingForm):
-    tenant_id = forms.CharField(label="ID (name)", widget=forms.TextInput(attrs={'readonly':'readonly'}))
+    tenant_id = forms.CharField(label="ID (name)",
+            widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     metadata_items = forms.CharField(label="Metadata Items")
     injected_files = forms.CharField(label="Injected Files")
-    injected_file_content_bytes = forms.CharField(label="Injected File Content Bytes")
+    injected_file_content_bytes = forms.CharField(label="Injected File "
+                                                        "Content Bytes")
     cores = forms.CharField(label="VCPUs")
     instances = forms.CharField(label="Instances")
     volumes = forms.CharField(label="Volumes")
@@ -140,16 +150,15 @@ class UpdateQuotas(forms.SelfHandlingForm):
     def handle(self, request, data):
         try:
             api.admin_api(request).quota_sets.update(data['tenant_id'],
-                          metadata_items=data['metadata_items'],
-                          injected_file_content_bytes=
-                          data['injected_file_content_bytes'],
-                          volumes=data['volumes'],
-                          gigabytes=data['gigabytes'],
-                          ram=int(data['ram']) * 100,
-                          floating_ips=data['floating_ips'],
-                          instances=data['instances'],
-                          injected_files=data['injected_files'],
-                          cores=data['cores'],
+               metadata_items=data['metadata_items'],
+               injected_file_content_bytes=data['injected_file_content_bytes'],
+               volumes=data['volumes'],
+               gigabytes=data['gigabytes'],
+               ram=int(data['ram']) * 100,
+               floating_ips=data['floating_ips'],
+               instances=data['instances'],
+               injected_files=data['injected_files'],
+               cores=data['cores'],
             )
             messages.success(request,
                              'Quotas for %s were successfully updated.'
@@ -169,9 +178,10 @@ def index(request):
         LOG.error('ApiException while getting tenant list', exc_info=True)
         messages.error(request, 'Unable to get tenant info: %s' % e.message)
     tenants.sort(key=lambda x: x.id, reverse=True)
-    return render_to_response('syspanel_tenants.html',{
+    return render_to_response(
+    'django_openstack/syspanel/tenants/index.html', {
         'tenants': tenants,
-    }, context_instance = template.RequestContext(request))
+    }, context_instance=template.RequestContext(request))
 
 
 @login_required
@@ -182,9 +192,9 @@ def create(request):
         return handled
 
     return render_to_response(
-    'syspanel_tenant_create.html',{
+    'django_openstack/syspanel/tenants/create.html', {
         'form': form,
-    }, context_instance = template.RequestContext(request))
+    }, context_instance=template.RequestContext(request))
 
 
 @login_required
@@ -207,9 +217,9 @@ def update(request, tenant_id):
             return redirect('syspanel_tenants')
 
     return render_to_response(
-    'syspanel_tenant_update.html',{
+    'django_openstack/syspanel/tenants/update.html', {
         'form': form,
-    }, context_instance = template.RequestContext(request))
+    }, context_instance=template.RequestContext(request))
 
 
 @login_required
@@ -237,13 +247,13 @@ def users(request, tenant_id):
         if i in new_user_ids:
             new_user_ids.remove(i)
     return render_to_response(
-    'syspanel_tenant_users.html',{
+    'django_openstack/syspanel/tenants/users.html', {
         'add_user_form': add_user_form,
         'remove_user_form': remove_user_form,
         'tenant_id': tenant_id,
         'users': users,
         'new_users': new_user_ids,
-    }, context_instance = template.RequestContext(request))
+    }, context_instance=template.RequestContext(request))
 
 
 @login_required
@@ -270,8 +280,8 @@ def quotas(request, tenant_id):
     form = UpdateQuotas(initial=quota_set)
 
     return render_to_response(
-    'syspanel_tenant_quotas.html',{
+    'django_openstack/syspanel/tenants/quotas.html', {
         'form': form,
         'tenant_id': tenant_id,
         'quotas': quotas,
-    }, context_instance = template.RequestContext(request))
+    }, context_instance=template.RequestContext(request))

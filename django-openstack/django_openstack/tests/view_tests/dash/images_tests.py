@@ -1,4 +1,23 @@
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
+
+# Copyright 2011 United States Government as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# All Rights Reserved.
+#
+# Copyright 2011 Nebula, Inc.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License"); you may
+#    not use this file except in compliance with the License. You may obtain
+#    a copy of the License at
+#
+#         http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#    License for the specific language governing permissions and limitations
+#    under the License.
+
 from django import http
 from django.contrib import messages
 from django.core.urlresolvers import reverse
@@ -35,8 +54,12 @@ class ImageViewTests(base.BaseViewTests):
         self.flavors = (flavor,)
 
         keypair = self.mox.CreateMock(api.KeyPair)
-        keypair.key_name = 'keyName'
+        keypair.name = 'keyName'
         self.keypairs = (keypair,)
+
+        security_group = self.mox.CreateMock(api.SecurityGroup)
+        security_group.name = 'default'
+        self.security_groups = (security_group,)
 
     def test_index(self):
         self.mox.StubOutWithMock(api, 'token_get_tenant')
@@ -49,7 +72,8 @@ class ImageViewTests(base.BaseViewTests):
 
         res = self.client.get(reverse('dash_images', args=[self.TEST_TENANT]))
 
-        self.assertTemplateUsed(res, 'dash_images.html')
+        self.assertTemplateUsed(res,
+                'django_openstack/dash/images/index.html')
 
         self.assertIn('images', res.context)
         images = res.context['images']
@@ -72,7 +96,8 @@ class ImageViewTests(base.BaseViewTests):
 
         res = self.client.get(reverse('dash_images', args=[self.TEST_TENANT]))
 
-        self.assertTemplateUsed(res, 'dash_images.html')
+        self.assertTemplateUsed(res,
+                'django_openstack/dash/images/index.html')
 
         self.mox.VerifyAll()
 
@@ -91,7 +116,8 @@ class ImageViewTests(base.BaseViewTests):
 
         res = self.client.get(reverse('dash_images', args=[self.TEST_TENANT]))
 
-        self.assertTemplateUsed(res, 'dash_images.html')
+        self.assertTemplateUsed(res,
+                'django_openstack/dash/images/index.html')
 
         self.mox.VerifyAll()
 
@@ -110,7 +136,8 @@ class ImageViewTests(base.BaseViewTests):
 
         res = self.client.get(reverse('dash_images', args=[self.TEST_TENANT]))
 
-        self.assertTemplateUsed(res, 'dash_images.html')
+        self.assertTemplateUsed(res,
+                'django_openstack/dash/images/index.html')
 
         self.mox.VerifyAll()
 
@@ -135,12 +162,17 @@ class ImageViewTests(base.BaseViewTests):
         self.mox.StubOutWithMock(api, 'keypair_list')
         api.keypair_list(IsA(http.HttpRequest)).AndReturn(self.keypairs)
 
+        self.mox.StubOutWithMock(api, 'security_group_list')
+        api.security_group_list(IsA(http.HttpRequest)).AndReturn(
+                                    self.security_groups)
+
         self.mox.ReplayAll()
 
         res = self.client.get(reverse('dash_images_launch',
                               args=[self.TEST_TENANT, IMAGE_ID]))
 
-        self.assertTemplateUsed(res, 'dash_launch.html')
+        self.assertTemplateUsed(res,
+                'django_openstack/dash/images/launch.html')
 
         image = res.context['image']
         self.assertEqual(image.name, self.visibleImage.name)
@@ -154,14 +186,14 @@ class ImageViewTests(base.BaseViewTests):
 
         form_keyfield = form.fields['key_name']
         self.assertEqual(form_keyfield.choices[0][0],
-                         self.keypairs[0].key_name)
+                         self.keypairs[0].name)
 
         self.mox.VerifyAll()
 
     def test_launch_post(self):
         FLAVOR_ID = self.flavors[0].id
         IMAGE_ID = '1'
-        KEY_NAME = self.keypairs[0].key_name
+        KEY_NAME = self.keypairs[0].name
         SERVER_NAME = 'serverName'
         USER_DATA = 'userData'
 
@@ -172,6 +204,7 @@ class ImageViewTests(base.BaseViewTests):
                      'name': SERVER_NAME,
                      'user_data': USER_DATA,
                      'tenant_id': self.TEST_TENANT,
+                     'security_groups': 'default',
                      }
 
         self.mox.StubOutWithMock(api, 'image_get')
@@ -192,6 +225,10 @@ class ImageViewTests(base.BaseViewTests):
         self.mox.StubOutWithMock(api, 'keypair_list')
         api.keypair_list(IsA(http.HttpRequest)).AndReturn(self.keypairs)
 
+        self.mox.StubOutWithMock(api, 'security_group_list')
+        api.security_group_list(IsA(http.HttpRequest)).AndReturn(
+                                    self.security_groups)
+
         # called again by the form
         api.image_get(IsA(http.HttpRequest),
                       IMAGE_ID).AndReturn(self.visibleImage)
@@ -204,7 +241,7 @@ class ImageViewTests(base.BaseViewTests):
 
         api.server_create(IsA(http.HttpRequest), SERVER_NAME,
                           self.visibleImage, self.flavors[0],
-                          KEY_NAME, USER_DATA)
+                          KEY_NAME, USER_DATA, [self.security_groups[0].name])
 
         self.mox.StubOutWithMock(messages, 'success')
         messages.success(IsA(http.HttpRequest), IsA(str))
@@ -242,12 +279,17 @@ class ImageViewTests(base.BaseViewTests):
         self.mox.StubOutWithMock(api, 'keypair_list')
         api.keypair_list(IsA(http.HttpRequest)).AndReturn(self.keypairs)
 
+        self.mox.StubOutWithMock(api, 'security_group_list')
+        api.security_group_list(IsA(http.HttpRequest)).AndReturn(
+                                    self.security_groups)
+
         self.mox.ReplayAll()
 
         res = self.client.get(reverse('dash_images_launch',
                               args=[self.TEST_TENANT, IMAGE_ID]))
 
-        self.assertTemplateUsed(res, 'dash_launch.html')
+        self.assertTemplateUsed(res,
+                'django_openstack/dash/images/launch.html')
 
         form = res.context['form']
 
@@ -278,12 +320,17 @@ class ImageViewTests(base.BaseViewTests):
         self.mox.StubOutWithMock(api, 'keypair_list')
         api.keypair_list(IsA(http.HttpRequest)).AndRaise(exception)
 
+        self.mox.StubOutWithMock(api, 'security_group_list')
+        api.security_group_list(IsA(http.HttpRequest)).AndReturn(
+                                    self.security_groups)
+
         self.mox.ReplayAll()
 
         res = self.client.get(reverse('dash_images_launch',
                               args=[self.TEST_TENANT, IMAGE_ID]))
 
-        self.assertTemplateUsed(res, 'dash_launch.html')
+        self.assertTemplateUsed(res,
+                'django_openstack/dash/images/launch.html')
 
         form = res.context['form']
 
@@ -295,7 +342,7 @@ class ImageViewTests(base.BaseViewTests):
     def test_launch_form_apiexception(self):
         FLAVOR_ID = self.flavors[0].id
         IMAGE_ID = '1'
-        KEY_NAME = self.keypairs[0].key_name
+        KEY_NAME = self.keypairs[0].name
         SERVER_NAME = 'serverName'
         USER_DATA = 'userData'
 
@@ -306,6 +353,7 @@ class ImageViewTests(base.BaseViewTests):
                      'name': SERVER_NAME,
                      'tenant_id': self.TEST_TENANT,
                      'user_data': USER_DATA,
+                     'security_groups': 'default',
                      }
 
         self.mox.StubOutWithMock(api, 'image_get')
@@ -326,6 +374,10 @@ class ImageViewTests(base.BaseViewTests):
         self.mox.StubOutWithMock(api, 'keypair_list')
         api.keypair_list(IgnoreArg()).AndReturn(self.keypairs)
 
+        self.mox.StubOutWithMock(api, 'security_group_list')
+        api.security_group_list(IsA(http.HttpRequest)).AndReturn(
+                                    self.security_groups)
+
         # called again by the form
         api.image_get(IgnoreArg(),
                       IMAGE_ID).AndReturn(self.visibleImage)
@@ -339,8 +391,8 @@ class ImageViewTests(base.BaseViewTests):
         exception = api_exceptions.ApiException('apiException')
         api.server_create(IsA(http.HttpRequest), SERVER_NAME,
                           self.visibleImage, self.flavors[0],
-                          KEY_NAME,
-                          USER_DATA).AndRaise(exception)
+                          KEY_NAME, USER_DATA,
+                          self.security_groups).AndRaise(exception)
 
         self.mox.StubOutWithMock(messages, 'error')
         messages.error(IsA(http.HttpRequest), IsA(str))
@@ -350,6 +402,7 @@ class ImageViewTests(base.BaseViewTests):
                       args=[self.TEST_TENANT, IMAGE_ID])
         res = self.client.post(url, form_data)
 
-        self.assertTemplateUsed(res, 'dash_launch.html')
+        self.assertTemplateUsed(res,
+                'django_openstack/dash/images/launch.html')
 
         self.mox.VerifyAll()

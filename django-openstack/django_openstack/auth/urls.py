@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -25,5 +25,6 @@ from django.conf import settings
 urlpatterns = patterns('django_openstack.auth.views',
     url(r'login/$', 'login', name='auth_login'),
     url(r'logout/$', 'logout', name='auth_logout'),
-    url(r'switch/(?P<tenant_id>[^/]+)/$', 'switch_tenants', name='auth_switch'),
+    url(r'switch/(?P<tenant_id>[^/]+)/$', 'switch_tenants',
+        name='auth_switch'),
 )

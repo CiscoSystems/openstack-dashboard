@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -47,11 +47,14 @@ class UserForm(forms.Form):
     def __init__(self, *args, **kwargs):
         tenant_list = kwargs.pop('tenant_list', None)
         super(UserForm, self).__init__(*args, **kwargs)
-        self.fields['tenant_id'].choices = [[tenant.id,tenant.id] for tenant in tenant_list]
+        self.fields['tenant_id'].choices = [[tenant.id, tenant.id]
+                for tenant in tenant_list]
 
     id = forms.CharField(label="ID (username)")
     email = forms.CharField(label="Email")
-    password = forms.CharField(label="Password", widget=forms.PasswordInput(render_value=False), required=False)
+    password = forms.CharField(label="Password",
+                               widget=forms.PasswordInput(render_value=False),
+                               required=False)
     tenant_id = forms.ChoiceField(label="Primary Tenant")
 
 
@@ -64,7 +67,6 @@ class UserDeleteForm(forms.SelfHandlingForm):
         api.user_delete(request, user_id)
         messages.info(request, '%s was successfully deleted.'
                                 % user_id)
-            
         return redirect(request.build_absolute_uri())
 
 
@@ -108,8 +110,8 @@ def index(request):
 
     user_delete_form = UserDeleteForm()
     user_enable_disable_form = UserEnableDisableForm()
-    
-    return shortcuts.render_to_response('syspanel_users.html', {
+
+    return shortcuts.render_to_response('django_openstack/syspanel/users/index.html', {
         'users': users,
         'user_delete_form': user_delete_form,
         'user_enable_disable_form': user_enable_disable_form,
@@ -144,10 +146,10 @@ def update(request, user_id):
                                     please try again.')
 
             return render_to_response(
-            'syspanel_user_update.html',{
+            'django_openstack/syspanel/users/update.html', {
                 'form': form,
                 'user_id': user_id,
-            }, context_instance = template.RequestContext(request))
+            }, context_instance=template.RequestContext(request))
 
     else:
         u = api.user_get(request, user_id)
@@ -167,10 +169,10 @@ def update(request, user_id):
                                  'email': email},
                                  tenant_list=tenants)
         return render_to_response(
-        'syspanel_user_update.html',{
+        'django_openstack/syspanel/users/update.html', {
             'form': form,
             'user_id': user_id,
-        }, context_instance = template.RequestContext(request))
+        }, context_instance=template.RequestContext(request))
 
 
 @login_required
@@ -216,13 +218,13 @@ def create(request):
                 return redirect('syspanel_users')
         else:
             return render_to_response(
-            'syspanel_user_create.html',{
+            'django_openstack/syspanel/users/create.html', {
                 'form': form,
-            }, context_instance = template.RequestContext(request))
+            }, context_instance=template.RequestContext(request))
 
     else:
         form = UserForm(tenant_list=tenants)
         return render_to_response(
-        'syspanel_user_create.html',{
+        'django_openstack/syspanel/users/create.html', {
             'form': form,
-        }, context_instance = template.RequestContext(request))
+        }, context_instance=template.RequestContext(request))

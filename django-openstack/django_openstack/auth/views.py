@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -66,7 +66,7 @@ class Login(forms.SelfHandlingForm):
 
 class LoginWithTenant(Login):
     username = forms.CharField(max_length="20",
-                               widget=forms.TextInput(attrs={'readonly':'readonly'}))
+                       widget=forms.TextInput(attrs={'readonly': 'readonly'}))
     tenant = forms.CharField(widget=forms.HiddenInput())
 
 

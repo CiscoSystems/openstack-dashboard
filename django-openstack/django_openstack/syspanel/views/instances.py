@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -45,8 +45,8 @@ LOG = logging.getLogger('django_openstack.syspanel.views.instances')
 
 
 def _next_month(date_start):
-    y = date_start.year + (date_start.month + 1)/13
-    m = ((date_start.month + 1)%13)
+    y = date_start.year + (date_start.month + 1) / 13
+    m = ((date_start.month + 1) % 13)
     if m == 0:
         m = 1
     return datetime.date(y, m, 1)
@@ -54,15 +54,18 @@ def _next_month(date_start):
 
 def _current_month():
     today = datetime.date.today()
-    return datetime.date(today.year, today.month,1)
+    return datetime.date(today.year, today.month, 1)
 
 
 def _get_start_and_end_date(request):
     try:
-        date_start = datetime.date(int(request.GET['date_year']), int(request.GET['date_month']), 1)
+        date_start = datetime.date(
+                int(request.GET['date_year']),
+                int(request.GET['date_month']),
+                1)
     except:
         today = datetime.date.today()
-        date_start = datetime.date(today.year, today.month,1)
+        date_start = datetime.date(today.year, today.month, 1)
 
     date_end = _next_month(date_start)
     datetime_start = datetime.datetime.combine(date_start, datetime.time())
@@ -74,13 +77,15 @@ def _get_start_and_end_date(request):
 
 
 def _csv_usage_link(date_start):
-    return "?date_month=%s&date_year=%s&format=csv" % (date_start.month, date_start.year)
+    return "?date_month=%s&date_year=%s&format=csv" % (date_start.month,
+            date_start.year)
 
 
 @login_required
 @enforce_admin_access
 def usage(request):
-    (date_start, date_end, datetime_start, datetime_end) = _get_start_and_end_date(request)
+    (date_start, date_end, datetime_start, datetime_end) = \
+            _get_start_and_end_date(request)
 
     global_summary = api.GlobalSummary(request)
     if date_start > _current_month():
@@ -99,12 +104,12 @@ def usage(request):
     global_summary.human_readable('ram_size')
 
     if request.GET.get('format', 'html') == 'csv':
-        template_name = 'syspanel_usage.csv'
+        template_name = 'django_openstack/syspanel/instances/usage.csv'
         mimetype = "text/csv"
     else:
-        template_name = 'syspanel_usage.html'
+        template_name = 'django_openstack/syspanel/instances/usage.html'
         mimetype = "text/html"
-    
+
     return render_to_response(
     template_name, {
         'dateform': dateform,
@@ -114,13 +119,14 @@ def usage(request):
         'csv_link': _csv_usage_link(date_start),
         'global_summary': global_summary.summary,
         'external_links': settings.EXTERNAL_MONITORING,
-    }, context_instance = template.RequestContext(request), mimetype=mimetype)
+    }, context_instance=template.RequestContext(request), mimetype=mimetype)
 
 
 @login_required
 @enforce_admin_access
 def tenant_usage(request, tenant_id):
-    (date_start, date_end, datetime_start, datetime_end) = _get_start_and_end_date(request)
+    (date_start, date_end, datetime_start, datetime_end) = \
+            _get_start_and_end_date(request)
     if date_start > _current_month():
         messages.error(request, 'No data for the selected period')
         date_end = date_start
@@ -153,10 +159,10 @@ def tenant_usage(request, tenant_id):
                 running_instances.append(i)
 
     if request.GET.get('format', 'html') == 'csv':
-        template_name = 'syspanel_tenant_usage.csv'
+        template_name = 'django_openstack/syspanel/instances/tenant_usage.csv'
         mimetype = "text/csv"
     else:
-        template_name = 'syspanel_tenant_usage.html'
+        template_name = 'django_openstack/syspanel/instances/tenant_usage.html'
         mimetype = "text/html"
 
     return render_to_response(template_name, {
@@ -167,7 +173,7 @@ def tenant_usage(request, tenant_id):
         'csv_link': _csv_usage_link(date_start),
         'instances': running_instances + terminated_instances,
         'tenant_id': tenant_id,
-    }, context_instance = template.RequestContext(request), mimetype=mimetype)
+    }, context_instance=template.RequestContext(request), mimetype=mimetype)
 
 
 @login_required
@@ -190,11 +196,13 @@ def index(request):
     terminate_form = TerminateInstance()
     reboot_form = RebootInstance()
 
-    return render_to_response('syspanel_instances.html', {
+    return render_to_response(
+    'django_openstack/syspanel/instances/index.html', {
         'instances': instances,
         'terminate_form': terminate_form,
         'reboot_form': reboot_form,
     }, context_instance=template.RequestContext(request))
+
 
 @login_required
 @enforce_admin_access
@@ -215,7 +223,8 @@ def refresh(request):
     terminate_form = TerminateInstance()
     reboot_form = RebootInstance()
 
-    return render_to_response('_syspanel_instance_list.html', {
+    return render_to_response(
+    'django_openstack/syspanel/instances/_list.html', {
         'instances': instances,
         'terminate_form': terminate_form,
         'reboot_form': reboot_form,

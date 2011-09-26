@@ -1,0 +1,39 @@
+{% extends 'django_openstack/dash/base.html' %}
+
+{% block sidebar %}
+  {% with current_sidebar="networks" %}
+    {{block.super}}
+  {% endwith %}
+{% endblock %}
+
+{% block page_header %}
+  {% url dash_networks_detail request.user.tenant network.id as refresh_link %}
+  {# to make searchable false, just remove it from the include statement #}
+  {% include "django_openstack/common/_page_header.html" with title=network.name refresh_link=refresh_link searchable="true" %}
+{% endblock page_header %}
+
+{% block breadcrumbs %}
+    <a href="{% url dash_networks tenant %}">Networks</a>&nbsp;&raquo;&nbsp;
+    <a href="{% url dash_networks_detail tenant network.id %}">{{network.name}}</a>
+{% endblock %}
+
+{% block dash_main %}
+  {% if network.ports %}
+    {% if multiport %}
+    <a id="create_multiport_link" class="action_link large-rounded" href="{% url dash_multiports_create request.user.tenant %}">Create Multiports</a>
+    {% else %}
+    {% include 'django_openstack/dash/networks/_detail.html' %}
+    <a id="network_create_link" class="action_link large-rounded" href="{% url dash_ports_create request.user.tenant network.id %}">Create Ports</a>
+    {% endif %}
+  {% else %}
+    <div class="message_box info">
+     {% if multiport %}
+     <h2>Info</h2>
+     <p>This is a Cisco multi-blade/chassis network. Create ports using the multiport page: <a href="{% url dash_multiports_create request.user.tenant %}">Create Ports &gt;&gt;</a></p>
+     {% else %}
+     <h2>Info</h2>
+     <p>There are currently no ports in this network. <a href="{% url dash_ports_create request.user.tenant network.id %}">Create Ports &gt;&gt;</a></p>
+     {% endif %}
+    </div> 
+  {% endif %}
+{% endblock %}

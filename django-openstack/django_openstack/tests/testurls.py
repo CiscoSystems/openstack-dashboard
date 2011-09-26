@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -29,8 +29,10 @@ from django_openstack import urls as django_openstack_urls
 
 urlpatterns = patterns('',
     url(r'^$', 'django_openstack.tests.views.fakeView', name='splash'),
-    url(r'^dash/$', 'django_openstack.dash.views.instances.usage', name='dash_overview'),
-    url(r'^syspanel/$', 'django_openstack.syspanel.views.instances.usage', name='syspanel_overview')
+    url(r'^dash/$', 'django_openstack.dash.views.instances.usage',
+        name='dash_overview'),
+    url(r'^syspanel/$', 'django_openstack.syspanel.views.instances.usage',
+        name='syspanel_overview')
 )
 
 

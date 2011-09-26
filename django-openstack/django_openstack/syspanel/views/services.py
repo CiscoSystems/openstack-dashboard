@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -100,7 +100,7 @@ def index(request):
             up = False
         hostname = urlparse.urlparse(v['internalURL']).hostname
         row = {'type': k, 'internalURL': v['internalURL'], 'host': hostname,
-               'region': v['region'], 'up': up }
+               'region': v['region'], 'up': up}
         other_services.append(row)
 
     services = sorted(services, key=lambda svc: (svc.type +
@@ -108,8 +108,9 @@ def index(request):
     other_services = sorted(other_services, key=lambda svc: (svc['type'] +
                                                              svc['host']))
 
-    return render_to_response('syspanel_services.html', {
+    return render_to_response(
+    'django_openstack/syspanel/services/index.html', {
         'services': services,
         'service_toggle_enabled_form': ToggleService,
         'other_services': other_services,
-    }, context_instance = template.RequestContext(request))
+    }, context_instance=template.RequestContext(request))

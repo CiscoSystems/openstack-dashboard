@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -75,6 +75,7 @@ class DeleteFlavor(forms.SelfHandlingForm):
                                      e.message)
         return redirect(request.build_absolute_uri())
 
+
 @login_required
 @enforce_admin_access
 def index(request):
@@ -93,10 +94,11 @@ def index(request):
         messages.error(request, 'Unable to get usage info: %s' % e.message)
 
     flavors.sort(key=lambda x: x.id, reverse=True)
-    return render_to_response('syspanel_flavors.html',{
+    return render_to_response(
+    'django_openstack/syspanel/flavors/index.html', {
         'delete_form': delete_form,
         'flavors': flavors,
-    }, context_instance = template.RequestContext(request))
+    }, context_instance=template.RequestContext(request))
 
 
 @login_required
@@ -112,7 +114,8 @@ def create(request):
     global_summary.human_readable('disk_size')
     global_summary.human_readable('ram_size')
 
-    return render_to_response('syspanel_create_flavor.html',{
+    return render_to_response(
+    'django_openstack/syspanel/flavors/create.html', {
         'global_summary': global_summary.summary,
         'form': form,
-    }, context_instance = template.RequestContext(request))
+    }, context_instance=template.RequestContext(request))

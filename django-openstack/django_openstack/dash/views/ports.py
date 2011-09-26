@@ -4,7 +4,7 @@
 # Administrator of the National Aeronautics and Space Administration.
 # All Rights Reserved.
 #
-# Copyright 2011 Fourth Paradigm Development, Inc.
+# Copyright 2011 Nebula, Inc.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -183,7 +183,8 @@ def create(request, tenant_id, network_id):
             network_id=network_id
         )
 
-    return shortcuts.render_to_response('dash_ports_create.html', {
+    return shortcuts.render_to_response(
+    'django_openstack/dash/ports/create.html', {
         'network_id': network_id,
         'create_form': create_form
     }, context_instance=template.RequestContext(request))
@@ -200,7 +201,8 @@ def attach(request, tenant_id, network_id, port_id):
     # Get all avaliable vifs
     vifs = _get_available_vifs(request)
 
-    return shortcuts.render_to_response('dash_port_attach.html', {
+    return shortcuts.render_to_response(
+    'django_openstack/dash/ports/attach.html', {
         'network': network_id,
         'port': port_id,
         'attach_form': attach_form,
